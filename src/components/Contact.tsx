@@ -2,11 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useState } from "react";
 
 const Contact = () => {
   const { toast } = useToast();
+  const { ref, isVisible } = useScrollAnimation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,9 +33,9 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="py-20 bg-muted/30">
+    <section id="contact" className="py-20 bg-muted/30" ref={ref}>
       <div className="container px-4">
-        <div className="text-center mb-16">
+        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Get In <span className="text-primary">Touch</span>
           </h2>
@@ -43,7 +45,7 @@ const Contact = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <div>
+          <div className={`transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: '200ms' }}>
             <h3 className="text-2xl font-bold mb-6">Send Us a Message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -97,7 +99,7 @@ const Contact = () => {
             </form>
           </div>
 
-          <div className="space-y-8">
+          <div className={`space-y-8 transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: '400ms' }}>
             <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
             
             <div className="flex items-start gap-4">

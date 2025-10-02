@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Leaf, Droplets, Sprout } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import organicImage from "@/assets/fertilizer-organic.jpg";
 import liquidImage from "@/assets/fertilizer-liquid.jpg";
 import specialtyImage from "@/assets/fertilizer-specialty.jpg";
@@ -29,10 +30,12 @@ const products = [
 ];
 
 const Products = () => {
+  const { ref, isVisible } = useScrollAnimation();
+  
   return (
-    <section id="products" className="py-20 bg-muted/30">
+    <section id="products" className="py-20 bg-muted/30" ref={ref}>
       <div className="container px-4">
-        <div className="text-center mb-16">
+        <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Our <span className="text-primary">Product Range</span>
           </h2>
@@ -45,7 +48,10 @@ const Products = () => {
           {products.map((product, index) => (
             <Card 
               key={index}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2"
+              className={`overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 ${
+                isVisible ? 'animate-fade-up' : 'opacity-0'
+              }`}
+              style={{ animationDelay: `${index * 150}ms` }}
             >
               <div className="h-48 overflow-hidden">
                 <img 

@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-agriculture.jpg";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 const Hero = () => {
+  const { ref, isVisible } = useScrollAnimation();
+  
   const scrollToContact = () => {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -16,8 +19,8 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
       </div>
       
-      <div className="container relative z-10 px-4 py-20">
-        <div className="max-w-3xl">
+      <div className="container relative z-10 px-4 py-20" ref={ref}>
+        <div className={`max-w-3xl transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
             Nourish Your Crops,{" "}
             <span className="text-primary">Grow Your Future</span>
