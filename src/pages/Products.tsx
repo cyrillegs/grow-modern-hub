@@ -1,8 +1,14 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Leaf, Droplets, Sprout, Check } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import organicImage from "@/assets/fertilizer-organic.jpg";
@@ -71,6 +77,22 @@ const products = [
 
 const Products = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { toast } = useToast();
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const handleQuoteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    toast({
+      title: "Quote Request Sent!",
+      description: `We'll contact you soon regarding ${selectedProduct}.`,
+    });
+    
+    setIsDialogOpen(false);
+    e.currentTarget.reset();
+  };
   
   return (
     <div className="min-h-screen">
@@ -143,7 +165,55 @@ const Products = () => {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center border-t pt-6">
                       <span className="text-lg font-bold text-primary">{product.price}</span>
-                      <Button>Request Quote</Button>
+                      <Dialog open={isDialogOpen && selectedProduct === product.title} onOpenChange={(open) => {
+                        setIsDialogOpen(open);
+                        if (open) setSelectedProduct(product.title);
+                      }}>
+                        <DialogTrigger asChild>
+                          <Button onClick={() => {
+                            setSelectedProduct(product.title);
+                            setIsDialogOpen(true);
+                          }}>
+                            Request Quote
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px]">
+                          <DialogHeader>
+                            <DialogTitle>Request Quote - {product.title}</DialogTitle>
+                            <DialogDescription>
+                              Fill out the form below and we'll get back to you with a custom quote.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleQuoteSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="name">Name *</Label>
+                              <Input id="name" name="name" required placeholder="Your full name" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="email">Email *</Label>
+                              <Input id="email" name="email" type="email" required placeholder="your@email.com" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="phone">Phone</Label>
+                              <Input id="phone" name="phone" type="tel" placeholder="Your phone number" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="quantity">Estimated Quantity</Label>
+                              <Input id="quantity" name="quantity" placeholder="e.g., 100 bags, 500 gallons" />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="message">Additional Details</Label>
+                              <Textarea 
+                                id="message" 
+                                name="message" 
+                                placeholder="Tell us about your specific needs..." 
+                                className="min-h-[100px]"
+                              />
+                            </div>
+                            <Button type="submit" className="w-full">Submit Quote Request</Button>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </CardFooter>
                   </Card>
                 );
