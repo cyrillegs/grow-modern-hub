@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Sprout } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
+  const location = useLocation();
+  
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -18,24 +21,26 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            <button 
-              onClick={() => scrollToSection('products')}
+            <Link 
+              to="/"
+              className="text-foreground hover:text-primary transition-colors font-medium"
+            >
+              Home
+            </Link>
+            <Link 
+              to="/products"
               className="text-foreground hover:text-primary transition-colors font-medium"
             >
               Products
-            </button>
-            <button 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="text-foreground hover:text-primary transition-colors font-medium"
-            >
-              About
-            </button>
-            <Button 
-              onClick={() => scrollToSection('contact')}
-              className="bg-primary hover:bg-primary/90"
-            >
-              Contact Us
-            </Button>
+            </Link>
+            {location.pathname === '/' && (
+              <Button 
+                onClick={() => scrollToSection('contact')}
+                variant="default"
+              >
+                Contact Us
+              </Button>
+            )}
           </div>
         </div>
       </div>
