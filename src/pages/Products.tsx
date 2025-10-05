@@ -17,61 +17,175 @@ import specialtyImage from "@/assets/fertilizer-specialty.jpg";
 
 const products = [
   {
-    title: "Organic Fertilizers",
-    description: "Natural, eco-friendly solutions that enrich soil health and promote sustainable farming practices.",
+    title: "NPK 20-20-20",
+    description: "Balanced all-purpose fertilizer ideal for general crop nutrition and greenhouse applications.",
+    icon: Sprout,
+    image: specialtyImage,
+    features: [
+      "Equal NPK ratio for balanced growth",
+      "Water soluble formula",
+      "Suitable for all crops",
+      "Quick nutrient release",
+      "Versatile application methods"
+    ],
+    specs: {
+      npk: "20-20-20",
+      application: "Foliar spray or fertigation",
+      coverage: "25 lbs per acre"
+    },
+    price: "$42/bag (25kg)"
+  },
+  {
+    title: "Urea (46-0-0)",
+    description: "High nitrogen fertilizer for rapid vegetative growth and greening of crops.",
+    icon: Leaf,
+    image: organicImage,
+    features: [
+      "46% nitrogen content",
+      "Cost-effective solution",
+      "Fast-acting nitrogen source",
+      "Increases protein content",
+      "Promotes leafy growth"
+    ],
+    specs: {
+      npk: "46-0-0",
+      application: "Broadcast or top dressing",
+      coverage: "40 lbs per acre"
+    },
+    price: "$28/bag (50kg)"
+  },
+  {
+    title: "DAP (18-46-0)",
+    description: "Diammonium Phosphate for strong root development and early plant establishment.",
+    icon: Sprout,
+    image: specialtyImage,
+    features: [
+      "High phosphorus content",
+      "Excellent for root growth",
+      "Ideal for planting season",
+      "Improves seedling vigor",
+      "Long-lasting phosphate source"
+    ],
+    specs: {
+      npk: "18-46-0",
+      application: "Band or broadcast at planting",
+      coverage: "35 lbs per acre"
+    },
+    price: "$38/bag (50kg)"
+  },
+  {
+    title: "Muriate of Potash (0-0-60)",
+    description: "Premium potassium fertilizer for fruit development and disease resistance.",
+    icon: Droplets,
+    image: liquidImage,
+    features: [
+      "60% potassium content",
+      "Enhances fruit quality",
+      "Improves stress tolerance",
+      "Increases crop yield",
+      "Boosts disease resistance"
+    ],
+    specs: {
+      npk: "0-0-60",
+      application: "Broadcast or side dressing",
+      coverage: "30 lbs per acre"
+    },
+    price: "$32/bag (50kg)"
+  },
+  {
+    title: "Organic Compost Blend",
+    description: "100% natural organic fertilizer enriched with beneficial microorganisms.",
     icon: Leaf,
     image: organicImage,
     features: [
       "100% Natural ingredients",
-      "Soil health enrichment",
-      "Long-lasting nutrients",
-      "Environmentally safe",
-      "Improved water retention"
+      "Improves soil structure",
+      "Rich in organic matter",
+      "Slow-release nutrients",
+      "Environmentally safe"
     ],
     specs: {
       npk: "5-3-2",
-      application: "Broadcast or band application",
-      coverage: "50 lbs per acre"
+      application: "Broadcast or incorporation",
+      coverage: "2 tons per acre"
     },
-    price: "Starting at $45/bag"
+    price: "$25/bag (40kg)"
   },
   {
-    title: "Liquid Solutions",
-    description: "Fast-acting liquid fertilizers for immediate nutrient delivery and rapid plant response.",
-    icon: Droplets,
-    image: liquidImage,
-    features: [
-      "Quick absorption",
-      "Precise application",
-      "Water soluble",
-      "Foliar or soil application",
-      "Instant results"
-    ],
-    specs: {
-      npk: "10-5-5",
-      application: "Spray or drip irrigation",
-      coverage: "1 gallon per 100 sq ft"
-    },
-    price: "Starting at $35/gallon"
-  },
-  {
-    title: "Specialty Formulas",
-    description: "Custom-blended NPK fertilizers tailored to specific crop needs and soil conditions.",
+    title: "NPK 15-15-15",
+    description: "Complete balanced fertilizer for all-season crop nutrition and maintenance.",
     icon: Sprout,
     image: specialtyImage,
     features: [
-      "Crop-specific formulation",
-      "Balanced nutrition",
-      "Enhanced yield potential",
-      "Custom NPK ratios",
-      "Professional-grade quality"
+      "Balanced nutrition profile",
+      "Suitable for most crops",
+      "Consistent nutrient release",
+      "Easy to apply",
+      "All-purpose formula"
     ],
     specs: {
       npk: "15-15-15",
-      application: "Customizable",
-      coverage: "Varies by formulation"
+      application: "Broadcast or banding",
+      coverage: "40 lbs per acre"
     },
-    price: "Starting at $55/bag"
+    price: "$35/bag (50kg)"
+  },
+  {
+    title: "Liquid NPK 10-5-5",
+    description: "Fast-acting liquid fertilizer for immediate nutrient uptake and quick results.",
+    icon: Droplets,
+    image: liquidImage,
+    features: [
+      "Instant absorption",
+      "Perfect for foliar feeding",
+      "Water soluble concentrate",
+      "Precise dosing control",
+      "Rapid green-up effect"
+    ],
+    specs: {
+      npk: "10-5-5",
+      application: "Foliar spray or drip irrigation",
+      coverage: "1 liter per 200 sq ft"
+    },
+    price: "$45/gallon (5L)"
+  },
+  {
+    title: "Calcium Nitrate",
+    description: "Premium calcium and nitrogen source for preventing blossom end rot and calcium deficiency.",
+    icon: Leaf,
+    image: organicImage,
+    features: [
+      "Dual calcium-nitrogen source",
+      "Prevents calcium deficiency",
+      "Water soluble",
+      "Improves fruit firmness",
+      "Reduces plant stress"
+    ],
+    specs: {
+      npk: "15.5-0-0 + 19% Ca",
+      application: "Fertigation or foliar spray",
+      coverage: "20 lbs per acre"
+    },
+    price: "$48/bag (25kg)"
+  },
+  {
+    title: "Micronutrient Mix",
+    description: "Complete micronutrient blend containing zinc, iron, manganese, and boron.",
+    icon: Sprout,
+    image: specialtyImage,
+    features: [
+      "Essential trace elements",
+      "Prevents micronutrient deficiency",
+      "Chelated for better absorption",
+      "Improves crop quality",
+      "Compatible with most fertilizers"
+    ],
+    specs: {
+      npk: "Zn, Fe, Mn, B, Cu, Mo",
+      application: "Foliar or soil application",
+      coverage: "5 lbs per acre"
+    },
+    price: "$65/bag (10kg)"
   },
 ];
 
