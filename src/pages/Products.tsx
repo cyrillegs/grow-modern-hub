@@ -79,7 +79,8 @@ const Products = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { toast } = useToast();
   const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
+  const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
   
   const handleQuoteSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,7 +91,20 @@ const Products = () => {
       description: `We'll contact you soon regarding ${selectedProduct}.`,
     });
     
-    setIsDialogOpen(false);
+    setIsQuoteDialogOpen(false);
+    e.currentTarget.reset();
+  };
+  
+  const handleCheckoutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    toast({
+      title: "Order Placed!",
+      description: `Your order for ${selectedProduct} has been received. We'll contact you to confirm payment and delivery.`,
+    });
+    
+    setIsCheckoutDialogOpen(false);
     e.currentTarget.reset();
   };
   
@@ -163,57 +177,126 @@ const Products = () => {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between items-center border-t pt-6">
-                      <span className="text-lg font-bold text-primary">{product.price}</span>
-                      <Dialog open={isDialogOpen && selectedProduct === product.title} onOpenChange={(open) => {
-                        setIsDialogOpen(open);
-                        if (open) setSelectedProduct(product.title);
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button onClick={() => {
-                            setSelectedProduct(product.title);
-                            setIsDialogOpen(true);
-                          }}>
-                            Request Quote
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                          <DialogHeader>
-                            <DialogTitle>Request Quote - {product.title}</DialogTitle>
-                            <DialogDescription>
-                              Fill out the form below and we'll get back to you with a custom quote.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <form onSubmit={handleQuoteSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="name">Name *</Label>
-                              <Input id="name" name="name" required placeholder="Your full name" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="email">Email *</Label>
-                              <Input id="email" name="email" type="email" required placeholder="your@email.com" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="phone">Phone</Label>
-                              <Input id="phone" name="phone" type="tel" placeholder="Your phone number" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="quantity">Estimated Quantity</Label>
-                              <Input id="quantity" name="quantity" placeholder="e.g., 100 bags, 500 gallons" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="message">Additional Details</Label>
-                              <Textarea 
-                                id="message" 
-                                name="message" 
-                                placeholder="Tell us about your specific needs..." 
-                                className="min-h-[100px]"
-                              />
-                            </div>
-                            <Button type="submit" className="w-full">Submit Quote Request</Button>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
+                    <CardFooter className="flex flex-col gap-3 border-t pt-6">
+                      <span className="text-lg font-bold text-primary w-full text-center">{product.price}</span>
+                      <div className="flex gap-2 w-full">
+                        <Dialog open={isCheckoutDialogOpen && selectedProduct === product.title} onOpenChange={(open) => {
+                          setIsCheckoutDialogOpen(open);
+                          if (open) setSelectedProduct(product.title);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedProduct(product.title);
+                                setIsCheckoutDialogOpen(true);
+                              }}
+                            >
+                              Buy Now
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                              <DialogTitle>Checkout - {product.title}</DialogTitle>
+                              <DialogDescription>
+                                Complete your order details below.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-name">Name *</Label>
+                                <Input id="checkout-name" name="name" required placeholder="Your full name" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-email">Email *</Label>
+                                <Input id="checkout-email" name="email" type="email" required placeholder="your@email.com" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-phone">Phone *</Label>
+                                <Input id="checkout-phone" name="phone" type="tel" required placeholder="Your phone number" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-quantity">Quantity *</Label>
+                                <Input id="checkout-quantity" name="quantity" type="number" min="1" required placeholder="How many units?" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-address">Delivery Address *</Label>
+                                <Textarea 
+                                  id="checkout-address" 
+                                  name="address" 
+                                  required
+                                  placeholder="Enter your complete delivery address..." 
+                                  className="min-h-[80px]"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="checkout-notes">Order Notes</Label>
+                                <Textarea 
+                                  id="checkout-notes" 
+                                  name="notes" 
+                                  placeholder="Any special instructions..." 
+                                  className="min-h-[60px]"
+                                />
+                              </div>
+                              <Button type="submit" className="w-full">Place Order</Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                        
+                        <Dialog open={isQuoteDialogOpen && selectedProduct === product.title} onOpenChange={(open) => {
+                          setIsQuoteDialogOpen(open);
+                          if (open) setSelectedProduct(product.title);
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedProduct(product.title);
+                                setIsQuoteDialogOpen(true);
+                              }}
+                            >
+                              Request Quote
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                              <DialogTitle>Request Quote - {product.title}</DialogTitle>
+                              <DialogDescription>
+                                Fill out the form below and we'll get back to you with a custom quote.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleQuoteSubmit} className="space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="quote-name">Name *</Label>
+                                <Input id="quote-name" name="name" required placeholder="Your full name" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="quote-email">Email *</Label>
+                                <Input id="quote-email" name="email" type="email" required placeholder="your@email.com" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="quote-phone">Phone</Label>
+                                <Input id="quote-phone" name="phone" type="tel" placeholder="Your phone number" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="quote-quantity">Estimated Quantity</Label>
+                                <Input id="quote-quantity" name="quantity" placeholder="e.g., 100 bags, 500 gallons" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="quote-message">Additional Details</Label>
+                                <Textarea 
+                                  id="quote-message" 
+                                  name="message" 
+                                  placeholder="Tell us about your specific needs..." 
+                                  className="min-h-[100px]"
+                                />
+                              </div>
+                              <Button type="submit" className="w-full">Submit Quote Request</Button>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </CardFooter>
                   </Card>
                 );
