@@ -1,7 +1,7 @@
 # STAGE 1: Build the React application
 # Use an official Node.js runtime as the base image
 # Using alpine for a smaller image size
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS build
 
 # Set the working directory in the container
 WORKDIR /app
@@ -21,22 +21,20 @@ COPY . .
 # This creates a 'build' folder with static assets
 RUN npm run build
 
-# STAGE 2: Serve the application with Nginx
+# STAGE 2: Serve the application with 'serve'
 # Use a lightweight Nginx image
-FROM nginx:1.27-alpine
+FROM node:20-alpine
 
-# Copy the build output from the 'builder' stage
-# This copies the static files from /app/build in the 'builder'
-# stage into the Nginx default server directory.
-COPY --from=builder /app/build /usr/share/nginx/html
+# Install 'serve' to serve the build folder
+RUN npm install -g serve
 
-# Copy the custom Nginx configuration
-# This file is needed to properly handle client-side routing
-# (e.g., React Router) by redirecting all 404s to index.html.
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Expose port 80 (the default Nginx port)
-EXPOSE 80
+# Copy the build folder from the previous stage
+COPY --from=builder /app/build ./build
 
-# Start Nginx in the foreground when the container starts
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port 8080 for Cloud Run
+EXPOSE 8080
+
+# Run the app with 'serve'
+CMD ["serve", "-s", "build", "-l", "8080"]
