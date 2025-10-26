@@ -31,7 +31,7 @@ RUN npm install -g serve
 WORKDIR /app
 
 # Copy the build folder from the previous stage
-COPY --from=builder /app/build ./build
+COPY --from=build /app/build ./build
 
 # Expose port 8080 for Cloud Run
 EXPOSE 8080
