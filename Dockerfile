@@ -31,10 +31,10 @@ RUN npm install -g serve
 WORKDIR /app
 
 # Copy the build folder from the previous stage
-COPY --from=build /app/build ./build
+COPY --from=build /app/dist ./dist
 
 # Expose port 8080 for Cloud Run
 EXPOSE 8080
 
 # Run the app with 'serve'
-CMD ["serve", "-s", "build", "-l", "8080"]
+CMD ["serve", "-s", "dist", "-l", "8080"]
