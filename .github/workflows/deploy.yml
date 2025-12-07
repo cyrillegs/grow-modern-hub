@@ -1,4 +1,4 @@
-name: Deploy Vite App
+name: Deploy Vite App + Backend
 
 on:
   push:
@@ -9,34 +9,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node for frontend
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3️⃣ Install frontend dependencies
       - name: Install dependencies
         run: npm install
 
+      # 4️⃣ Build frontend
       - name: Build project
         run: npm run build
 
-      - name: Upload files to VPS
+      # 5️⃣ Upload frontend to VPS
+      - name: Upload frontend to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
           source: "dist/*"
-          target: "${{ secrets.SERVER_PATH }}"
+          target: "${{ secrets.SERVER_PATH }}/dist"
 
-      - name: Restart Nginx
+      # 6️⃣ Upload backend to VPS
+      - name: Upload backend to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
+          source: "backend/dist/*" # adjust if your backend build path is different
+          target: "${{ secrets.SERVER_PATH }}/backend"
+
+      # 7️⃣ Restart backend service and Nginx
+      - name: Restart backend and Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
           script: |
+            # Restart backend (systemd service)
+            sudo systemctl restart myapp-backend || true
+            # Restart Nginx
             sudo systemctl restart nginx
