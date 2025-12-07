@@ -1,4 +1,4 @@
-name: Deploy Vite App + Backend
+name: Deploy Vite Frontend
 
 on:
   push:
@@ -13,13 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node for frontend
+      # 2️⃣ Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ Install frontend dependencies
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
 
@@ -27,38 +27,35 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Upload frontend to VPS
+      # 5️⃣ Clean old files on VPS (optional but recommended)
+      - name: Clean VPS folder
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          script: |
+            rm -rf ${{ secrets.SERVER_PATH }}/*
+
+      # 6️⃣ Upload frontend to VPS
       - name: Upload frontend to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
-          source: "dist/*"
-          target: "${{ secrets.SERVER_PATH }}"
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          source: "dist/*" # copy contents only
+          target: "${{ secrets.SERVER_PATH }}" # your web root folder
 
-      # 6️⃣ Upload backend to VPS
-      # - name: Upload backend to VPS
-      #  uses: appleboy/scp-action@v0.1.7
-      #  with:
-      #    host: ${{ secrets.SERVER_HOST }}
-      #    username: ${{ secrets.SERVER_USER }}
-      #    key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #    port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
-      #    source: "backend/dist/*" # adjust if your backend build path is different
-      #    target: "${{ secrets.SERVER_PATH }}/backend"
-
-      # 7️⃣ Restart backend service and Nginx
-      # - name: Restart backend and Nginx
-      #  uses: appleboy/ssh-action@v1.0.0
-      #  with:
-      #    host: ${{ secrets.SERVER_HOST }}
-      #    username: ${{ secrets.SERVER_USER }}
-      #    key: ${{ secrets.SSH_PRIVATE_KEY }}
-      #    port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
-      #    script: |
-      # Restart backend (systemd service)
-      #      sudo systemctl restart myapp-backend || true
-      # Restart Nginx
-      #      sudo systemctl restart nginx
+      # 7️⃣ Reload Nginx on VPS
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          script: |
+            sudo systemctl reload nginx
