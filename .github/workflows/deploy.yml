@@ -36,7 +36,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT }} # <-- custom SSH port
           source: "dist/*"
-          target: "${{ secrets.SERVER_PATH }}/dist"
+          target: "${{ secrets.SERVER_PATH }}"
 
       # 6️⃣ Upload backend to VPS
       # - name: Upload backend to VPS
