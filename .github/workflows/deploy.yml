@@ -27,7 +27,7 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Clean old files on VPS (optional but recommended)
+      # 5️⃣ Clean VPS folder (including hidden files)
       - name: Clean VPS folder
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -36,9 +36,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT }}
           script: |
-            rm -rf ${{ secrets.SERVER_PATH }}/*
+            rm -rf ${{ secrets.SERVER_PATH }}/* ${{ secrets.SERVER_PATH }}/.[!.]* || true
 
-      # 6️⃣ Upload frontend to VPS
+      # 6️⃣ Upload frontend build contents (no nested dist)
       - name: Upload frontend to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -46,10 +46,10 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT }}
-          source: "dist/*" # copy contents only
-          target: "${{ secrets.SERVER_PATH }}" # your web root folder
+          source: "dist/*" # upload contents only
+          target: "${{ secrets.SERVER_PATH }}" # web root folder
 
-      # 7️⃣ Reload Nginx on VPS
+      # 7️⃣ Reload Nginx
       - name: Reload Nginx
         uses: appleboy/ssh-action@v1.0.0
         with:
