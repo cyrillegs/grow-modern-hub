@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Sprout } from "lucide-react";
+import { Sprout, Leaf } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
@@ -18,7 +18,7 @@ const Navbar = () => {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-              <Sprout className="h-6 w-6 text-primary-foreground" />
+              <Leaf className="h-6 w-6 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold">GreenGrows</span>
           </div>
