@@ -237,3 +237,13 @@ try_files $uri /index.html;
 # ✅ Done!
 Your React + Vite app is now fully automated with GitHub Actions and VPS deployment.
 
+## What technologies are used for this project?
+
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
