@@ -36,6 +36,12 @@ const Navbar = () => {
             >
               Products
             </Link>
+            <Link
+              to="/admin"
+              className="text-foreground hover:text-primary transition-colors font-medium"
+            >
+              Admin
+            </Link>
             {location.pathname === "/" && (
               <Button
                 onClick={() => scrollToSection("contact")}
