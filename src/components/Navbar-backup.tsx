@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, Menu, X } from "lucide-react";
+import { Sprout, Leaf } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -15,7 +13,6 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -26,7 +23,6 @@ const Navbar = () => {
             <span className="text-xl font-bold">GreenGrows</span>
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             <Link
               to="/"
@@ -55,59 +51,7 @@ const Navbar = () => {
               </Button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              {isOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="md:hidden flex flex-col gap-4 py-4">
-            <Link
-              to="/"
-              className="text-foreground hover:text-primary transition-colors font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              to="/products"
-              className="text-foreground hover:text-primary transition-colors font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Products
-            </Link>
-            <Link
-              to="/admin"
-              className="text-foreground hover:text-primary transition-colors font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Admin
-            </Link>
-            {location.pathname === "/" && (
-              <Button
-                onClick={() => {
-                  scrollToSection("contact");
-                  setIsOpen(false);
-                }}
-                variant="default"
-              >
-                Contact Us
-              </Button>
-            )}
-          </div>
-        )}
       </div>
     </nav>
   );
