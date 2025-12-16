@@ -253,7 +253,9 @@ const Products = () => {
           <div className="container px-4">
             <div
               className={`text-center mb-16 transition-all duration-700 ${
-                headerVisible ? "animate-fade-up" : "opacity-0"
+                headerVisible || window.innerWidth < 768
+                  ? "animate-fade-up"
+                  : "opacity-0"
               }`}
             >
               <h1 className="text-5xl md:text-6xl font-bold mb-6">
