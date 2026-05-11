@@ -16,7 +16,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
-import { WHATSAPP_URL, WhatsAppIcon } from "@/components/whatsapp";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
@@ -165,32 +164,6 @@ const Contact = () => {
                 </Button>
               </form>
             </Form>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-muted/30 px-3 text-xs uppercase tracking-wider text-muted-foreground">
-                  or for a faster reply
-                </span>
-              </div>
-            </div>
-
-            <Button
-              asChild
-              size="lg"
-              className="w-full bg-[#25D366] hover:bg-[#1FBA56] text-white transition-colors duration-200"
-            >
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <WhatsAppIcon className="h-5 w-5 mr-2" />
-                Chat on WhatsApp
-              </a>
-            </Button>
           </div>
 
           <div className={`space-y-8 transition-all duration-700 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: '400ms' }}>
