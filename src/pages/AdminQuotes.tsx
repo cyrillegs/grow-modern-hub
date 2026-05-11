@@ -35,9 +35,11 @@ import {
   Package,
   Calendar,
   Filter,
+  LogOut,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data - In a real app, this would come from your backend/database
 const mockQuotes = [
@@ -99,6 +101,7 @@ const mockQuotes = [
 ];
 
 const AdminQuotes = () => {
+  const { signOut } = useAuth();
   const [quotes, setQuotes] = useState(mockQuotes);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -178,11 +181,17 @@ const AdminQuotes = () => {
       <main className="pt-16">
         <div className="container px-4 py-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Quote Requests</h1>
-            <p className="text-muted-foreground">
-              Manage and respond to customer quote requests
-            </p>
+          <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Quote Requests</h1>
+              <p className="text-muted-foreground">
+                Manage and respond to customer quote requests
+              </p>
+            </div>
+            <Button variant="outline" onClick={signOut} className="gap-2 self-start">
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </Button>
           </div>
 
           {/* Stats Cards */}
