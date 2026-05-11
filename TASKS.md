@@ -27,7 +27,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Sign up at https://resend.com.
 - [ ] Verify the sending domain (SPF + DKIM DNS records on your domain registrar).
 - [ ] Write a Supabase Edge Function `notify-quote` that calls Resend on `quotes` insert.
-  - Owner notification → mustardseedlabsph@gmail.com (subject + summary + link to /admin).
+  - Owner notification → cyrildave.legaspi@gmail.com (subject + summary + link to /admin).
   - Customer confirmation → submitted address (short "we received your quote" message).
 - [ ] Trigger via Database Webhook (Supabase → Edge Function on `quotes` row insert).
 - [ ] Mirror for `contacts` table (owner notification only — contacts don't need a separate confirmation, the homepage form already shows a success toast).
