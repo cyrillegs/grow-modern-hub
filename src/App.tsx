@@ -7,7 +7,10 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 import AdminQuotes from "./pages/AdminQuotes";
+import AdminLogin from "./pages/AdminLogin";
 import { WhatsAppFAB } from "@/components/whatsapp";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { RequireAuth } from "@/components/RequireAuth";
 
 const queryClient = new QueryClient();
 
@@ -17,14 +20,24 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-          <Route path="admin" element={<AdminQuotes />} />
-        </Routes>
-        <WhatsAppFAB />
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin"
+              element={
+                <RequireAuth>
+                  <AdminQuotes />
+                </RequireAuth>
+              }
+            />
+            {/* Catch-all MUST be last */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <WhatsAppFAB />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
