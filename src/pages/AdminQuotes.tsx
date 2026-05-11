@@ -198,47 +198,44 @@ const AdminQuotes = () => {
             </Card>
           )}
 
-          {/* Stats Cards */}
+          {/* Stats Cards — also act as filter chips */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Requests</CardDescription>
-                <CardTitle className="text-3xl">{stats.total}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Pending
-                </CardDescription>
-                <CardTitle className="text-3xl text-yellow-600">
-                  {stats.pending}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Processed
-                </CardDescription>
-                <CardTitle className="text-3xl text-green-600">
-                  {stats.processed}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  Cancelled
-                </CardDescription>
-                <CardTitle className="text-3xl text-red-600">
-                  {stats.cancelled}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            {(
+              [
+                { value: "all", label: "Total Requests", count: stats.total, icon: null, accent: "" },
+                { value: "pending", label: "Pending", count: stats.pending, icon: <Clock className="h-4 w-4" />, accent: "text-yellow-600" },
+                { value: "processed", label: "Processed", count: stats.processed, icon: <CheckCircle className="h-4 w-4" />, accent: "text-green-600" },
+                { value: "cancelled", label: "Cancelled", count: stats.cancelled, icon: <XCircle className="h-4 w-4" />, accent: "text-red-600" },
+              ] as const
+            ).map(({ value, label, count, icon, accent }) => {
+              const isActive = statusFilter === value;
+              return (
+                <Card
+                  key={value}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isActive}
+                  onClick={() => setStatusFilter(value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setStatusFilter(value);
+                    }
+                  }}
+                  className={`cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    isActive ? "ring-2 ring-primary shadow-md" : ""
+                  }`}
+                >
+                  <CardHeader className="pb-3">
+                    <CardDescription className="flex items-center gap-2">
+                      {icon}
+                      {label}
+                    </CardDescription>
+                    <CardTitle className={`text-3xl ${accent}`}>{count}</CardTitle>
+                  </CardHeader>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Filters and Search */}
