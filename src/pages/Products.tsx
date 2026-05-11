@@ -8,21 +8,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Leaf, Droplets, Sprout, Check } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { RequestQuoteDialog } from "@/components/RequestQuoteDialog";
@@ -215,22 +202,6 @@ const products = [
 
 const Products = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
-  const { toast } = useToast();
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
-
-  const handleCheckoutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    toast({
-      title: "Order Placed!",
-      description: `Your order for ${selectedProduct} has been received. We'll contact you to confirm payment and delivery.`,
-    });
-
-    setIsCheckoutDialogOpen(false);
-    e.currentTarget.reset();
-  };
 
   return (
     <div className="min-h-screen">
@@ -325,128 +296,20 @@ const Products = () => {
                       </div>
                     </CardContent>
                     <CardFooter className="flex flex-col gap-3 border-t pt-6">
-                      <span className="text-lg font-bold text-primary w-full text-center">
-                        {product.price}
-                      </span>
-
-                      {/* Dialog */}
-                      <div className="flex gap-2 w-full">
-                        {/* Buy Now Dialog */}
-                        <Dialog
-                          open={
-                            isCheckoutDialogOpen &&
-                            selectedProduct === product.title
-                          }
-                          onOpenChange={(open) => {
-                            setIsCheckoutDialogOpen(open);
-                            if (open) setSelectedProduct(product.title);
-                          }}
-                        >
-                          {/* Buy Now Trigger */}
-                          <DialogTrigger asChild>
-                            <Button
-                              className="flex-1"
-                              onClick={() => {
-                                setSelectedProduct(product.title);
-                                setIsCheckoutDialogOpen(true);
-                              }}
-                            >
-                              Buy Now
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[500px]">
-                            <DialogHeader>
-                              <DialogTitle>
-                                Checkout - {product.title}
-                              </DialogTitle>
-                              <DialogDescription>
-                                Complete your order details below.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <form
-                              onSubmit={handleCheckoutSubmit}
-                              className="space-y-4"
-                            >
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-name">Name *</Label>
-                                <Input
-                                  id="checkout-name"
-                                  name="name"
-                                  required
-                                  placeholder="Your full name"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-email">Email *</Label>
-                                <Input
-                                  id="checkout-email"
-                                  name="email"
-                                  type="email"
-                                  required
-                                  placeholder="your@email.com"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-phone">Phone *</Label>
-                                <Input
-                                  id="checkout-phone"
-                                  name="phone"
-                                  type="tel"
-                                  required
-                                  placeholder="Your phone number"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-quantity">
-                                  Quantity *
-                                </Label>
-                                <Input
-                                  id="checkout-quantity"
-                                  name="quantity"
-                                  type="number"
-                                  min="1"
-                                  required
-                                  placeholder="How many units?"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-address">
-                                  Delivery Address *
-                                </Label>
-                                <Textarea
-                                  id="checkout-address"
-                                  name="address"
-                                  required
-                                  placeholder="Enter your complete delivery address..."
-                                  className="min-h-[80px]"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="checkout-notes">
-                                  Order Notes
-                                </Label>
-                                <Textarea
-                                  id="checkout-notes"
-                                  name="notes"
-                                  placeholder="Any special instructions..."
-                                  className="min-h-[60px]"
-                                />
-                              </div>
-                              <Button type="submit" className="w-full">
-                                Place Order
-                              </Button>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                        <RequestQuoteDialog
-                          product={product.title}
-                          trigger={
-                            <Button variant="outline" className="flex-1">
-                              Request Quote
-                            </Button>
-                          }
-                        />
+                      <div className="w-full text-center">
+                        <p className="text-lg font-bold text-primary">
+                          {product.price}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Indicative — final pricing depends on quantity & delivery
+                        </p>
                       </div>
+                      <RequestQuoteDialog
+                        product={product.title}
+                        trigger={
+                          <Button className="w-full">Request Quote</Button>
+                        }
+                      />
                     </CardFooter>
                   </Card>
                 );
