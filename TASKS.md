@@ -12,29 +12,22 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 | Database, auth, storage | **Supabase** | Free tier; Postgres + Auth + Edge Functions |
 | Transactional email | **Resend** | Free tier 3k/mo, 100/day; needs SPF/DKIM on domain |
 | Forms & validation | **React Hook Form + Zod** | Pairs with existing shadcn `<Form>` primitive |
-| Server state | **TanStack Query** *(already installed)* | Reuse for Supabase queries |
+| Server state | **TanStack Query** *(already installed)* | Used in AdminQuotes for quotes table |
 | SEO meta | **react-helmet-async** | Per-route titles, descriptions, OG tags |
 | Analytics | **Vercel Analytics** *(or GA4)* | Vercel Analytics is one toggle; decide before step 7 |
 | Error tracking | **Sentry Free** | 5k errors/mo, Vite source-map plugin |
-| Testing | **Vitest + React Testing Library** | Defer Playwright |
+| Testing | **Vitest + React Testing Library** | Set up; Playwright deferred until later |
 
 ---
 
 ## Build Order — Remaining
 
-### Step 4 — Real quote pipeline (P1) ← **NEXT**
+### Step 4b — Customer "Request a Quote" form (P1) ← **NEXT**
 
-**4a. Admin side (planned PR #5)**
-- [ ] Replace `mockQuotes` in [src/pages/AdminQuotes.tsx:43](src/pages/AdminQuotes.tsx#L43) with TanStack Query `useQuery` calling Supabase.
-- [ ] Wire status updates (pending / processed / cancelled) to `useMutation` → `supabase.update`.
-- [ ] Wire delete actions to `useMutation` → `supabase.delete`.
-- [ ] Loading state (skeleton rows), error state, empty state.
-- [ ] Tighten types using `Database` interface from [src/types/database.ts](src/types/database.ts).
-
-**4b. Customer side (planned PR #6)**
 - [ ] Add **Request Quote** button on each product card in [src/pages/Products.tsx](src/pages/Products.tsx).
 - [ ] Open shadcn Dialog with a form (name, email, phone, quantity, message — product pre-filled).
 - [ ] Submit → `supabase.from("quotes").insert(...)` with toast success/error.
+- [ ] Tests alongside the feature (validation, successful submit, error path).
 
 ### Step 5 — Email notifications (P1)
 
@@ -52,11 +45,12 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Add `public/robots.txt` and `public/sitemap.xml`.
 - [ ] Add Organization + Product JSON-LD on `/` and `/products`.
 
-### Step 7 — Analytics & error tracking (P2)
+### Step 7 — Analytics, error tracking, CI (P2)
 
 - [ ] Decide Vercel Analytics vs GA4. Vercel Analytics is one toggle in the dashboard + `@vercel/analytics` package; GA4 needs a tag in [index.html](index.html).
 - [ ] `npm i @sentry/react`; init in [src/main.tsx](src/main.tsx); add Vite source-map plugin.
 - [ ] Configure Sentry release tagging via Vercel build env (`VERCEL_GIT_COMMIT_SHA`).
+- [ ] Add a GitHub Actions workflow that runs `npm run test:run` on every PR — bundled with Playwright when E2E tests are added.
 
 ### Step 8 — Quality / cleanup (P3)
 
@@ -64,13 +58,28 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Delete `.github/workflows/deploy.yml.txt` once Vercel deploys are stable (or move out of repo).
 - [ ] Update [CLAUDE.md](CLAUDE.md) deployment section — still describes the VPS flow which is no longer in use.
 - [ ] Delete the Supabase keepalive workflow + `keepalive` table once the site has consistent real traffic (≥1 form submission/week for a month).
-- [ ] Add Vitest + RTL: `npm i -D vitest @testing-library/react @testing-library/jest-dom jsdom`. Cover the contact form submission and admin filtering.
+- [ ] Backfill tests: AdminLogin sign-in flow, AdminQuotes filter/search, AdminQuotes mutations.
 - [ ] Decide whether to tighten [tsconfig.json](tsconfig.json) (`strictNullChecks`, `noImplicitAny`) — progressive opt-in by file is fine.
 - [ ] Image optimization audit (lazy-loading, sizing, modern formats).
+- [ ] (Optional) Add Playwright for end-to-end tests + bundle CI workflow with it.
 
 ---
 
 ## Done
+
+### 2026-05-11 — Step 4a: AdminQuotes wired to Supabase (PR #5)
+- [x] Replaced `mockQuotes` with `useQuery` against `supabase.from("quotes")`, ordered by `created_at` desc.
+- [x] Status updates and delete became `useMutation` with cache invalidation + destructive toast on error.
+- [x] Loading skeleton, error banner, empty-list state distinguishing "no rows" vs "no matches".
+- [x] Tightened types using `Database["public"]["Tables"]["quotes"]["Row"]` and `QuoteStatus` union.
+- [x] Made stats cards clickable as filter chips (Total / Pending / Processed / Cancelled).
+
+### 2026-05-11 — Test infrastructure (PR #6)
+- [x] Installed Vitest, React Testing Library, jest-dom, user-event, jsdom as dev deps.
+- [x] Configured [vite.config.ts](vite.config.ts) `test` block (globals, jsdom env, setup file).
+- [x] [src/test/setup.ts](src/test/setup.ts) — jest-dom matchers, auto-cleanup, IntersectionObserver stub.
+- [x] First test suite at [src/components/Contact.test.tsx](src/components/Contact.test.tsx) — 4 tests covering render, validation, successful submit, error path.
+- [x] `npm test` (watch) + `npm run test:run` (single pass) scripts.
 
 ### 2026-05-11 — Step 1: Foundation (Supabase + Vercel + Keepalive)
 - [x] Created Supabase project; populated `.env.local` with `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`.
@@ -80,30 +89,22 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [x] Migrated hosting from VPS to Vercel; old workflow disabled (`.github/workflows/deploy.yml.txt`).
 - [x] [vercel.json](vercel.json) SPA rewrite so `/products`, `/admin` don't 404 on refresh.
 - [x] Imported repo into Vercel; env vars set across Production / Preview / Development.
-- [x] Verified first deploy + SPA refresh behavior.
-- [x] Applied [supabase/migrations/0002_keepalive.sql](supabase/migrations/0002_keepalive.sql).
-- [x] [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) cron (Mon/Wed/Fri 00:00 UTC).
-- [x] Added GitHub repo secrets `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY`; manually triggered keepalive workflow to verify.
+- [x] Applied [supabase/migrations/0002_keepalive.sql](supabase/migrations/0002_keepalive.sql) + [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) cron.
 
 ### 2026-05-11 — Step 2: Contact form wired to Supabase (PR #1)
 - [x] Replaced toast-only handler in [src/components/Contact.tsx](src/components/Contact.tsx) with Supabase `INSERT` into `contacts`.
-- [x] React Hook Form + Zod typed validation.
-- [x] shadcn `<Form>` primitive with proper `<Label>` pairs (a11y fix — inputs had `placeholder` only before).
-- [x] Loading state ("Sending…"), error toast on failure, success toast + form reset on success.
+- [x] React Hook Form + Zod typed validation, proper `<Label>` pairs (a11y fix).
+- [x] Loading state ("Sending…"), destructive toast on error, success toast + form reset.
 
 ### 2026-05-11 — WhatsApp UX shift (PR #2 → PR #3)
-- [x] Added response-time subtitle on contact form: *"We'll get back to you within 1 business day."* (PR #2).
-- [x] Built floating WhatsApp FAB (Tawk.to-style) in bottom-right corner — brand green, shadcn Tooltip on hover, opens `wa.me/639954115063` with pre-filled message (PR #3).
-- [x] Hidden FAB on `/admin*` routes via `useLocation`.
-- [x] Removed the now-redundant form-bottom WhatsApp button + "or for a faster reply" divider (PR #3).
-- [x] Refactored shared WhatsApp constants/icon into [src/components/whatsapp.tsx](src/components/whatsapp.tsx).
+- [x] Response-time subtitle on contact form (PR #2).
+- [x] Floating WhatsApp FAB (Tawk.to-style) bottom-right, hidden on `/admin*` (PR #3).
+- [x] Removed redundant form-bottom WhatsApp button (PR #3); shared module at [src/components/whatsapp.tsx](src/components/whatsapp.tsx).
 
 ### 2026-05-11 — Step 3: Admin auth (PR #4)
-- [x] **Fixed route ordering bug** — `/admin` was below the catch-all `*` and resolved to `NotFound`. Catch-all is now last.
-- [x] [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) — `AuthProvider` + `useAuth()` hook, subscribes to `supabase.auth.onAuthStateChange`.
-- [x] [src/components/RequireAuth.tsx](src/components/RequireAuth.tsx) — route guard, preserves intended destination via `location.state.from`.
-- [x] [src/pages/AdminLogin.tsx](src/pages/AdminLogin.tsx) — email + password login with RHF + Zod; show/hide password toggle.
-- [x] Sign-out button in [AdminQuotes.tsx](src/pages/AdminQuotes.tsx) header.
-- [x] Disabled red FormLabel on validation error project-wide ([src/components/ui/form.tsx](src/components/ui/form.tsx)) — `FormMessage` already conveys the error.
-- [x] Disabled public sign-ups in Supabase Auth dashboard.
-- [x] Manually created owner account (mustardseedlabsph@gmail.com).
+- [x] **Fixed route ordering bug** — catch-all `*` was above `/admin` and made it resolve to `NotFound`.
+- [x] [src/contexts/AuthContext.tsx](src/contexts/AuthContext.tsx) + [src/components/RequireAuth.tsx](src/components/RequireAuth.tsx) + [src/pages/AdminLogin.tsx](src/pages/AdminLogin.tsx).
+- [x] Sign-out button in AdminQuotes header.
+- [x] Show/hide password toggle on login.
+- [x] Disabled red FormLabel on validation error project-wide ([src/components/ui/form.tsx](src/components/ui/form.tsx)).
+- [x] Disabled public sign-ups in Supabase Auth dashboard; manually created owner account.
