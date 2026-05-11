@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -25,131 +26,130 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Search,
-  MoreVertical,
+  AlertCircle,
+  Calendar,
   CheckCircle,
   Clock,
-  XCircle,
-  Mail,
-  Phone,
-  Package,
-  Calendar,
   Filter,
   LogOut,
+  Mail,
+  MoreVertical,
+  Package,
+  Phone,
+  Search,
+  XCircle,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import type { Database, QuoteStatus } from "@/types/database";
 
-// Mock data - In a real app, this would come from your backend/database
-const mockQuotes = [
-  {
-    id: "Q001",
-    name: "Juan Dela Cruz",
-    email: "juan@example.com",
-    phone: "+63 912 345 6789",
-    product: "NPK 20-20-20",
-    quantity: "100 bags",
-    message: "Need this for my 5-hectare corn farm. Delivery to Nueva Ecija.",
-    status: "pending",
-    date: "2024-12-08T10:30:00",
-  },
-  {
-    id: "Q002",
-    name: "Maria Santos",
-    email: "maria.santos@farm.com",
-    phone: "+63 917 654 3210",
-    product: "Urea (46-0-0)",
-    quantity: "200 bags",
-    message: "Bulk order for cooperative. Need best price for 200 bags.",
-    status: "processed",
-    date: "2024-12-07T14:20:00",
-  },
-  {
-    id: "Q003",
-    name: "Pedro Reyes",
-    email: "pedro.reyes@gmail.com",
-    phone: "+63 905 123 4567",
-    product: "Organic Compost Blend",
-    quantity: "50 bags",
-    message: "Interested in organic fertilizer for vegetable garden.",
-    status: "pending",
-    date: "2024-12-08T09:15:00",
-  },
-  {
-    id: "Q004",
-    name: "Ana Garcia",
-    email: "ana.garcia@agri.ph",
-    phone: "+63 918 765 4321",
-    product: "DAP (18-46-0)",
-    quantity: "150 bags",
-    message: "For rice planting season. Need delivery schedule.",
-    status: "cancelled",
-    date: "2024-12-06T16:45:00",
-  },
-  {
-    id: "Q005",
-    name: "Roberto Cruz",
-    email: "roberto@farmcoop.ph",
-    phone: "+63 922 333 4444",
-    product: "Liquid NPK 10-5-5",
-    quantity: "500 gallons",
-    message: "Large scale operation. Looking for volume discount.",
-    status: "processed",
-    date: "2024-12-05T11:00:00",
-  },
-];
+type Quote = Database["public"]["Tables"]["quotes"]["Row"];
+
+const QUOTES_QUERY_KEY = ["quotes"] as const;
+
+const formatId = (id: string) => `Q-${id.slice(0, 8)}`;
+
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const getStatusColor = (status: QuoteStatus) => {
+  switch (status) {
+    case "pending":
+      return "bg-yellow-500/10 text-yellow-700 border-yellow-300";
+    case "processed":
+      return "bg-green-500/10 text-green-700 border-green-300";
+    case "cancelled":
+      return "bg-red-500/10 text-red-700 border-red-300";
+  }
+};
+
+const getStatusIcon = (status: QuoteStatus) => {
+  switch (status) {
+    case "pending":
+      return <Clock className="h-3 w-3" />;
+    case "processed":
+      return <CheckCircle className="h-3 w-3" />;
+    case "cancelled":
+      return <XCircle className="h-3 w-3" />;
+  }
+};
 
 const AdminQuotes = () => {
   const { signOut } = useAuth();
-  const [quotes, setQuotes] = useState(mockQuotes);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | QuoteStatus>("all");
+  const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-500/10 text-yellow-700 border-yellow-300";
-      case "processed":
-        return "bg-green-500/10 text-green-700 border-green-300";
-      case "cancelled":
-        return "bg-red-500/10 text-red-700 border-red-300";
-      default:
-        return "bg-gray-500/10 text-gray-700 border-gray-300";
-    }
-  };
+  const { data: quotes, isLoading, isError } = useQuery<Quote[]>({
+    queryKey: QUOTES_QUERY_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quotes")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-3 w-3" />;
-      case "processed":
-        return <CheckCircle className="h-3 w-3" />;
-      case "cancelled":
-        return <XCircle className="h-3 w-3" />;
-      default:
-        return null;
-    }
-  };
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: QuoteStatus }) => {
+      const { error } = await supabase
+        .from("quotes")
+        .update({ status })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to update status",
+        description: "Try again or check your connection.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const updateQuoteStatus = (id, newStatus) => {
-    setQuotes(
-      quotes.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
-    );
-  };
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("quotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
+      toast({ title: "Quote deleted" });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to delete quote",
+        description: "Try again or check your connection.",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const deleteQuote = (id) => {
-    setQuotes(quotes.filter((q) => q.id !== id));
-  };
-
-  const filteredQuotes = quotes.filter((quote) => {
+  const filteredQuotes = (quotes ?? []).filter((quote) => {
+    const term = searchTerm.toLowerCase();
     const matchesSearch =
-      quote.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quote.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quote.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      quote.id.toLowerCase().includes(searchTerm.toLowerCase());
+      quote.name.toLowerCase().includes(term) ||
+      quote.email.toLowerCase().includes(term) ||
+      quote.product.toLowerCase().includes(term) ||
+      quote.id.toLowerCase().includes(term);
 
     const matchesStatus =
       statusFilter === "all" || quote.status === statusFilter;
@@ -158,21 +158,10 @@ const AdminQuotes = () => {
   });
 
   const stats = {
-    total: quotes.length,
-    pending: quotes.filter((q) => q.status === "pending").length,
-    processed: quotes.filter((q) => q.status === "processed").length,
-    cancelled: quotes.filter((q) => q.status === "cancelled").length,
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    total: quotes?.length ?? 0,
+    pending: quotes?.filter((q) => q.status === "pending").length ?? 0,
+    processed: quotes?.filter((q) => q.status === "processed").length ?? 0,
+    cancelled: quotes?.filter((q) => q.status === "cancelled").length ?? 0,
   };
 
   return (
@@ -194,47 +183,59 @@ const AdminQuotes = () => {
             </Button>
           </div>
 
-          {/* Stats Cards */}
+          {/* Error banner */}
+          {isError && (
+            <Card className="mb-6 border-destructive/40">
+              <CardContent className="p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-destructive">Failed to load quotes</p>
+                  <p className="text-sm text-muted-foreground">
+                    Check your connection or refresh the page.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Stats Cards — also act as filter chips */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Requests</CardDescription>
-                <CardTitle className="text-3xl">{stats.total}</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Pending
-                </CardDescription>
-                <CardTitle className="text-3xl text-yellow-600">
-                  {stats.pending}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  Processed
-                </CardDescription>
-                <CardTitle className="text-3xl text-green-600">
-                  {stats.processed}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  Cancelled
-                </CardDescription>
-                <CardTitle className="text-3xl text-red-600">
-                  {stats.cancelled}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            {(
+              [
+                { value: "all", label: "Total Requests", count: stats.total, icon: null, accent: "" },
+                { value: "pending", label: "Pending", count: stats.pending, icon: <Clock className="h-4 w-4" />, accent: "text-yellow-600" },
+                { value: "processed", label: "Processed", count: stats.processed, icon: <CheckCircle className="h-4 w-4" />, accent: "text-green-600" },
+                { value: "cancelled", label: "Cancelled", count: stats.cancelled, icon: <XCircle className="h-4 w-4" />, accent: "text-red-600" },
+              ] as const
+            ).map(({ value, label, count, icon, accent }) => {
+              const isActive = statusFilter === value;
+              return (
+                <Card
+                  key={value}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isActive}
+                  onClick={() => setStatusFilter(value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setStatusFilter(value);
+                    }
+                  }}
+                  className={`cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    isActive ? "ring-2 ring-primary shadow-md" : ""
+                  }`}
+                >
+                  <CardHeader className="pb-3">
+                    <CardDescription className="flex items-center gap-2">
+                      {icon}
+                      {label}
+                    </CardDescription>
+                    <CardTitle className={`text-3xl ${accent}`}>{count}</CardTitle>
+                  </CardHeader>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Filters and Search */}
@@ -261,19 +262,13 @@ const AdminQuotes = () => {
                     <DropdownMenuItem onClick={() => setStatusFilter("all")}>
                       All Requests
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setStatusFilter("pending")}
-                    >
+                    <DropdownMenuItem onClick={() => setStatusFilter("pending")}>
                       Pending
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setStatusFilter("processed")}
-                    >
+                    <DropdownMenuItem onClick={() => setStatusFilter("processed")}>
                       Processed
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setStatusFilter("cancelled")}
-                    >
+                    <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>
                       Cancelled
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -284,18 +279,29 @@ const AdminQuotes = () => {
 
           {/* Quotes List */}
           <div className="space-y-4">
-            {filteredQuotes.length === 0 ? (
+            {isLoading ? (
+              [0, 1, 2].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="space-y-3 animate-pulse">
+                      <div className="h-4 w-32 bg-muted rounded" />
+                      <div className="h-6 w-48 bg-muted rounded" />
+                      <div className="h-4 w-64 bg-muted rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : filteredQuotes.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12 text-muted-foreground">
-                  No quote requests found
+                  {quotes && quotes.length === 0
+                    ? "No quote requests yet."
+                    : "No quotes match your filters."}
                 </CardContent>
               </Card>
             ) : (
               filteredQuotes.map((quote) => (
-                <Card
-                  key={quote.id}
-                  className="hover:shadow-md transition-shadow"
-                >
+                <Card key={quote.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       {/* Left Section - Main Info */}
@@ -304,24 +310,18 @@ const AdminQuotes = () => {
                           <div>
                             <div className="flex items-center gap-3 mb-1">
                               <span className="text-sm font-mono text-muted-foreground">
-                                {quote.id}
+                                {formatId(quote.id)}
                               </span>
                               <Badge
                                 variant="outline"
-                                className={`${getStatusColor(
-                                  quote.status
-                                )} flex items-center gap-1`}
+                                className={`${getStatusColor(quote.status)} flex items-center gap-1`}
                               >
                                 {getStatusIcon(quote.status)}
                                 {quote.status}
                               </Badge>
                             </div>
-                            <h3 className="text-xl font-semibold">
-                              {quote.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {quote.email}
-                            </p>
+                            <h3 className="text-xl font-semibold">{quote.name}</h3>
+                            <p className="text-sm text-muted-foreground">{quote.email}</p>
                           </div>
                         </div>
 
@@ -332,14 +332,12 @@ const AdminQuotes = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>{formatDate(quote.date)}</span>
+                            <span>{formatDate(quote.created_at)}</span>
                           </div>
                           <div className="flex items-center gap-2 md:col-span-2">
                             <Package className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">{quote.product}</span>
-                            <span className="text-muted-foreground">
-                              - {quote.quantity}
-                            </span>
+                            <span className="text-muted-foreground">- {quote.quantity}</span>
                           </div>
                         </div>
 
@@ -355,9 +353,7 @@ const AdminQuotes = () => {
                       {/* Right Section - Actions */}
                       <div className="flex md:flex-col gap-2">
                         <Dialog
-                          open={
-                            isDetailDialogOpen && selectedQuote?.id === quote.id
-                          }
+                          open={isDetailDialogOpen && selectedQuote?.id === quote.id}
                           onOpenChange={(open) => {
                             setIsDetailDialogOpen(open);
                             if (open) setSelectedQuote(quote);
@@ -379,24 +375,20 @@ const AdminQuotes = () => {
                             <DialogHeader>
                               <DialogTitle>Quote Request Details</DialogTitle>
                               <DialogDescription>
-                                Request ID: {quote.id}
+                                Request ID: {formatId(quote.id)}
                               </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                   <Label>Customer Name</Label>
-                                  <p className="text-sm font-medium">
-                                    {quote.name}
-                                  </p>
+                                  <p className="text-sm font-medium">{quote.name}</p>
                                 </div>
                                 <div className="space-y-2">
                                   <Label>Status</Label>
                                   <Badge
                                     variant="outline"
-                                    className={`${getStatusColor(
-                                      quote.status
-                                    )} flex items-center gap-1 w-fit`}
+                                    className={`${getStatusColor(quote.status)} flex items-center gap-1 w-fit`}
                                   >
                                     {getStatusIcon(quote.status)}
                                     {quote.status}
@@ -425,12 +417,8 @@ const AdminQuotes = () => {
                                   <Package className="h-4 w-4" />
                                   Product & Quantity
                                 </Label>
-                                <p className="text-sm font-medium">
-                                  {quote.product}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {quote.quantity}
-                                </p>
+                                <p className="text-sm font-medium">{quote.product}</p>
+                                <p className="text-sm text-muted-foreground">{quote.quantity}</p>
                               </div>
 
                               <div className="space-y-2">
@@ -438,16 +426,13 @@ const AdminQuotes = () => {
                                   <Calendar className="h-4 w-4" />
                                   Request Date
                                 </Label>
-                                <p className="text-sm">
-                                  {formatDate(quote.date)}
-                                </p>
+                                <p className="text-sm">{formatDate(quote.created_at)}</p>
                               </div>
 
                               <div className="space-y-2">
                                 <Label>Additional Details</Label>
                                 <p className="text-sm bg-muted p-3 rounded-md">
-                                  {quote.message ||
-                                    "No additional details provided."}
+                                  {quote.message || "No additional details provided."}
                                 </p>
                               </div>
 
@@ -456,26 +441,26 @@ const AdminQuotes = () => {
                                   <>
                                     <Button
                                       className="flex-1"
-                                      onClick={() => {
-                                        updateQuoteStatus(
-                                          quote.id,
-                                          "processed"
-                                        );
-                                        setIsDetailDialogOpen(false);
-                                      }}
+                                      disabled={updateStatusMutation.isPending}
+                                      onClick={() =>
+                                        updateStatusMutation.mutate(
+                                          { id: quote.id, status: "processed" },
+                                          { onSuccess: () => setIsDetailDialogOpen(false) },
+                                        )
+                                      }
                                     >
                                       Mark as Processed
                                     </Button>
                                     <Button
                                       variant="destructive"
                                       className="flex-1"
-                                      onClick={() => {
-                                        updateQuoteStatus(
-                                          quote.id,
-                                          "cancelled"
-                                        );
-                                        setIsDetailDialogOpen(false);
-                                      }}
+                                      disabled={updateStatusMutation.isPending}
+                                      onClick={() =>
+                                        updateStatusMutation.mutate(
+                                          { id: quote.id, status: "cancelled" },
+                                          { onSuccess: () => setIsDetailDialogOpen(false) },
+                                        )
+                                      }
                                     >
                                       Cancel Request
                                     </Button>
@@ -485,10 +470,13 @@ const AdminQuotes = () => {
                                   <Button
                                     variant="outline"
                                     className="flex-1"
-                                    onClick={() => {
-                                      updateQuoteStatus(quote.id, "pending");
-                                      setIsDetailDialogOpen(false);
-                                    }}
+                                    disabled={updateStatusMutation.isPending}
+                                    onClick={() =>
+                                      updateStatusMutation.mutate(
+                                        { id: quote.id, status: "pending" },
+                                        { onSuccess: () => setIsDetailDialogOpen(false) },
+                                      )
+                                    }
                                   >
                                     Mark as Pending
                                   </Button>
@@ -497,10 +485,13 @@ const AdminQuotes = () => {
                                   <Button
                                     variant="outline"
                                     className="flex-1"
-                                    onClick={() => {
-                                      updateQuoteStatus(quote.id, "pending");
-                                      setIsDetailDialogOpen(false);
-                                    }}
+                                    disabled={updateStatusMutation.isPending}
+                                    onClick={() =>
+                                      updateStatusMutation.mutate(
+                                        { id: quote.id, status: "pending" },
+                                        { onSuccess: () => setIsDetailDialogOpen(false) },
+                                      )
+                                    }
                                   >
                                     Reopen Request
                                   </Button>
@@ -521,7 +512,10 @@ const AdminQuotes = () => {
                               <>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    updateQuoteStatus(quote.id, "processed")
+                                    updateStatusMutation.mutate({
+                                      id: quote.id,
+                                      status: "processed",
+                                    })
                                   }
                                 >
                                   <CheckCircle className="h-4 w-4 mr-2" />
@@ -529,7 +523,10 @@ const AdminQuotes = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    updateQuoteStatus(quote.id, "cancelled")
+                                    updateStatusMutation.mutate({
+                                      id: quote.id,
+                                      status: "cancelled",
+                                    })
                                   }
                                 >
                                   <XCircle className="h-4 w-4 mr-2" />
@@ -540,7 +537,10 @@ const AdminQuotes = () => {
                             {quote.status !== "pending" && (
                               <DropdownMenuItem
                                 onClick={() =>
-                                  updateQuoteStatus(quote.id, "pending")
+                                  updateStatusMutation.mutate({
+                                    id: quote.id,
+                                    status: "pending",
+                                  })
                                 }
                               >
                                 <Clock className="h-4 w-4 mr-2" />
@@ -549,7 +549,7 @@ const AdminQuotes = () => {
                             )}
                             <DropdownMenuItem
                               className="text-red-600"
-                              onClick={() => deleteQuote(quote.id)}
+                              onClick={() => deleteMutation.mutate(quote.id)}
                             >
                               Delete
                             </DropdownMenuItem>
