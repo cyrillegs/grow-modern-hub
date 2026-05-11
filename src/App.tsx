@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 import AdminQuotes from "./pages/AdminQuotes";
+import { WhatsAppFAB } from "@/components/whatsapp";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
           <Route path="admin" element={<AdminQuotes />} />
         </Routes>
+        <WhatsAppFAB />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
