@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
-import AdminQuotes from "./pages/AdminQuotes";
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import { WhatsAppFAB } from "@/components/whatsapp";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -29,7 +29,7 @@ const App = () => (
               path="/admin"
               element={
                 <RequireAuth>
-                  <AdminQuotes />
+                  <AdminDashboard />
                 </RequireAuth>
               }
             />
