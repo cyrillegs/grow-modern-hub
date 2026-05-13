@@ -38,6 +38,7 @@ import {
   Search,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { gmailComposeUrl, replyBodyTemplate } from "@/lib/email-links";
 import { useToast } from "@/hooks/use-toast";
 import type { ContactStatus, Database } from "@/types/database";
 
@@ -436,6 +437,25 @@ export const ContactsPanel = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="flex-1 md:flex-none md:w-24"
+                    >
+                      <a
+                        href={gmailComposeUrl({
+                          to: contact.email,
+                          subject: "Re: Your message to GreenGrows",
+                          body: replyBodyTemplate(contact.name),
+                        })}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Reply
+                      </a>
+                    </Button>
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
