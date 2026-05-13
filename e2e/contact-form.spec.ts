@@ -22,8 +22,11 @@ test("contact form submits and shows success toast", async ({ page }) => {
   // Submit
   await page.getByRole("button", { name: /^send message$/i }).click();
 
-  // Verify the success toast appears
-  await expect(page.getByText(/message sent!/i)).toBeVisible({ timeout: 10000 });
+  // Verify the success toast appears.
+  // Use exact match — shadcn/Radix also renders a screen-reader-only
+  // aria-live announcement that contains the same text concatenated with
+  // other content, which would otherwise trip Playwright's strict mode.
+  await expect(page.getByText("Message sent!", { exact: true })).toBeVisible({ timeout: 10000 });
 
   // Form should clear after success
   await expect(page.getByLabel(/^name/i)).toHaveValue("");

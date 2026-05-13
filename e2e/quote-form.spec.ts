@@ -25,8 +25,10 @@ test("quote request form submits and shows success toast", async ({ page }) => {
   // Submit
   await dialog.getByRole("button", { name: /submit quote request/i }).click();
 
-  // Success toast and dialog closes
-  await expect(page.getByText(/quote request sent!/i)).toBeVisible({ timeout: 10000 });
+  // Success toast and dialog closes.
+  // Exact match dodges the shadcn aria-live announcement that contains the
+  // same string concatenated with other text.
+  await expect(page.getByText("Quote request sent!", { exact: true })).toBeVisible({ timeout: 10000 });
   await expect(dialog).not.toBeVisible({ timeout: 5000 });
 });
 
