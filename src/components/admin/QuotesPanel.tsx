@@ -40,6 +40,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { AdminRepliesList } from "@/components/admin/AdminRepliesList";
+import { ReplyDialog } from "@/components/admin/ReplyDialog";
 import type { Database, QuoteStatus } from "@/types/database";
 
 type Quote = Database["public"]["Tables"]["quotes"]["Row"];
@@ -391,6 +393,11 @@ export const QuotesPanel = () => {
                             </p>
                           </div>
 
+                          <div className="space-y-2 pt-2">
+                            <Label>Reply History</Label>
+                            <AdminRepliesList sourceTable="quotes" sourceId={quote.id} />
+                          </div>
+
                           <div className="flex gap-2 pt-4">
                             {quote.status === "pending" && (
                               <>
@@ -455,6 +462,31 @@ export const QuotesPanel = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    <ReplyDialog
+                      to={quote.email}
+                      toName={quote.name}
+                      defaultSubject={`Re: Your quote request — ${quote.product}`}
+                      sourceTable="quotes"
+                      sourceId={quote.id}
+                      onSentSuccessfully={() => {
+                        if (quote.status === "pending") {
+                          updateStatusMutation.mutate({
+                            id: quote.id,
+                            status: "processed",
+                          });
+                        }
+                      }}
+                      trigger={
+                        <Button
+                          variant="outline"
+                          className="flex-1 md:flex-none md:w-24"
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Reply
+                        </Button>
+                      }
+                    />
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
