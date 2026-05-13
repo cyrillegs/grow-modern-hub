@@ -21,5 +21,7 @@ export default defineConfig(({ mode }) => ({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // Keep Vitest out of the Playwright e2e folder (different test runner)
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
   },
 }));
