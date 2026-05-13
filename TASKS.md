@@ -22,16 +22,20 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5 — Email notifications via Resend (P1) ← **NEXT**
+### Step 5b — Contacts tab on `/admin` (P1) ← **NEXT**
 
-- [ ] Sign up at https://resend.com.
-- [ ] Verify the sending domain (SPF + DKIM DNS records on your domain registrar).
-- [ ] Write a Supabase Edge Function `notify-quote` that calls Resend on `quotes` insert.
-  - Owner notification → cyrildave.legaspi@gmail.com (subject + summary + link to /admin).
-  - Customer confirmation → submitted address (short "we received your quote" message).
-- [ ] Trigger via Database Webhook (Supabase → Edge Function on `quotes` row insert).
-- [ ] Mirror for `contacts` table (owner notification only — contacts don't need a separate confirmation, the homepage form already shows a success toast).
+The contact form now sends emails to the owner, but contact messages still aren't visible in the admin dashboard (only quotes are). Add a tabbed admin view so all leads — both quotes and contacts — surface in one place.
+
+- [ ] Rename [src/pages/AdminQuotes.tsx](src/pages/AdminQuotes.tsx) → `AdminDashboard.tsx`.
+- [ ] Add shadcn `<Tabs>` at the top: **Quotes** (existing content) | **Contacts** (new).
+- [ ] Tab state persisted in URL search param (`?tab=contacts`) so bookmarks survive refresh.
+- [ ] New `AdminContacts.tsx` component mirroring AdminQuotes patterns: `useQuery` against `contacts` table, status updates (new/replied/archived) and delete via `useMutation`, stats cards as filter chips, search.
+- [ ] Tests alongside (Vitest + RTL) — at minimum a render test + a filter test.
+
+### Step 5c — Misc follow-ups (P2)
+
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
+- [ ] (Optional) Verify a real sending domain in Resend — swap `FROM_ADDRESS` secret from `onboarding@resend.dev` to `hello@<your-domain>` once you have one.
 
 ### Step 6 — SEO (P2)
 
@@ -45,7 +49,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Decide Vercel Analytics vs GA4. Vercel is one toggle + `@vercel/analytics`; GA4 needs a tag in [index.html](index.html).
 - [ ] `npm i @sentry/react`; init in [src/main.tsx](src/main.tsx); add Vite source-map plugin.
 - [ ] Configure Sentry release tagging via Vercel build env (`VERCEL_GIT_COMMIT_SHA`).
-- [ ] Add a GitHub Actions workflow that runs `npm run test:run` on every PR — bundled with Playwright when E2E tests are added.
+- [ ] Add a GitHub Actions workflow that runs `npm run test:run` + `npm run e2e:headless` on every PR.
 
 ### Step 8 — Quality / cleanup (P3)
 
@@ -57,7 +61,6 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Check whether the homepage `Products` *component* (used on `/`, distinct from `/products` page) still has a fake Buy Now or quote flow — clean up consistently if so.
 - [ ] Decide whether to tighten [tsconfig.json](tsconfig.json) (`strictNullChecks`, `noImplicitAny`) — progressive opt-in by file is fine.
 - [ ] Image optimization audit (lazy-loading, sizing, modern formats).
-- [ ] (Optional) Add Playwright for end-to-end tests + bundle CI workflow with it.
 
 ### Future (not scheduled)
 
@@ -67,6 +70,19 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 ---
 
 ## Done
+
+### 2026-05-13 — Step 5: Resend email notifications (PR #8)
+- [x] Supabase Edge Functions `notify-quote` and `notify-contact` deployed and triggered by Database Webhooks on row INSERT.
+- [x] Resend account + API key configured as Supabase secret.
+- [x] FROM_ADDRESS uses Resend's `onboarding@resend.dev` for now (no domain DNS required).
+- [x] Owner notification (reply-to = customer) + customer confirmation for quotes; owner-only for contacts.
+- [x] Polished email templates with branded green header strip, info-table layout, message-quote block, centered CTA button, WhatsApp footer.
+
+### 2026-05-13 — Playwright E2E tests (PR #9, ahead of schedule)
+- [x] @playwright/test installed + chromium browser.
+- [x] [playwright.config.ts](playwright.config.ts) with auto dev-server, single Chromium worker, headed locally / headless in CI.
+- [x] 4 tests across [e2e/contact-form.spec.ts](e2e/contact-form.spec.ts) and [e2e/quote-form.spec.ts](e2e/quote-form.spec.ts) — submit + validation paths.
+- [x] npm scripts: `e2e`, `e2e:ui`, `e2e:headless`. README at [e2e/README.md](e2e/README.md).
 
 ### 2026-05-11 — Step 4b: Customer Request Quote form + Buy Now removal (PR #7)
 - [x] New [src/components/RequestQuoteDialog.tsx](src/components/RequestQuoteDialog.tsx) — self-contained Dialog + RHF + Zod, takes `product` + `trigger` as props.
