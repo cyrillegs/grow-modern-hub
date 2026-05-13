@@ -7,11 +7,13 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import {
   ADMIN_URL,
-  BRAND_GREEN,
-  LABEL_GREY,
   OWNER_EMAIL,
-  emailWrapper,
-  escapeHtml,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  ctaButton,
+  emailLayout,
+  infoRow,
+  messageBlock,
   sendEmail,
 } from "../_shared/email.ts";
 
@@ -35,29 +37,22 @@ type WebhookPayload = {
 function ownerEmailHtml(c: ContactRecord): string {
   const phone = c.phone ?? "(not provided)";
 
-  return emailWrapper(`
-<h2 style="color: ${BRAND_GREEN}; margin: 0 0 16px;">New Contact Form Message</h2>
-<p style="margin: 0 0 20px;">A new message just came in from the contact form:</p>
-<table style="border-collapse: collapse; margin: 0 0 16px;">
-  <tr>
-    <td style="padding: 6px 16px 6px 0; color: ${LABEL_GREY}; vertical-align: top; white-space: nowrap;"><strong>Name</strong></td>
-    <td style="padding: 6px 0;">${escapeHtml(c.name)}</td>
-  </tr>
-  <tr>
-    <td style="padding: 6px 16px 6px 0; color: ${LABEL_GREY}; vertical-align: top;"><strong>Email</strong></td>
-    <td style="padding: 6px 0;">${escapeHtml(c.email)}</td>
-  </tr>
-  <tr>
-    <td style="padding: 6px 16px 6px 0; color: ${LABEL_GREY}; vertical-align: top;"><strong>Phone</strong></td>
-    <td style="padding: 6px 0;">${escapeHtml(phone)}</td>
-  </tr>
-</table>
-<div style="background: #f9fafb; border-left: 3px solid ${BRAND_GREEN}; padding: 12px 16px; margin: 0 0 24px; border-radius: 4px;">
-  <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(c.message)}</p>
-</div>
-<p style="margin: 0 0 20px;">
-  <a href="${ADMIN_URL}" style="display: inline-block; padding: 10px 20px; background: ${BRAND_GREEN}; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">View in Admin Dashboard</a>
-</p>`);
+  const body = `
+      <h2 style="margin: 0 0 8px; color: ${TEXT_PRIMARY}; font-size: 22px; font-weight: 700; line-height: 1.3;">New Contact Message</h2>
+      <p style="margin: 0 0 28px; color: ${TEXT_MUTED}; font-size: 15px; line-height: 1.5;">Someone reached out through the contact form. Reply to this email to respond directly.</p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        ${infoRow("From", c.name)}
+        ${infoRow("Email", c.email)}
+        ${infoRow("Phone", phone, true)}
+      </table>
+      ${messageBlock(c.message)}
+      ${ctaButton("Open in Admin Dashboard", ADMIN_URL)}`;
+
+  return emailLayout({
+    preheader: `New contact from ${c.name}`,
+    body,
+  });
 }
 
 serve(async (req) => {

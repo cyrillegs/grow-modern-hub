@@ -8,11 +8,18 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import {
   ADMIN_URL,
+  BLOCKQUOTE_BG,
   BRAND_GREEN,
-  LABEL_GREY,
   OWNER_EMAIL,
-  emailWrapper,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  WHATSAPP_DISPLAY,
+  WHATSAPP_URL,
+  ctaButton,
+  emailLayout,
   escapeHtml,
+  infoRow,
+  messageBlock,
   sendEmail,
 } from "../_shared/email.ts";
 
@@ -36,46 +43,68 @@ type WebhookPayload = {
 };
 
 function ownerEmailHtml(q: QuoteRecord): string {
-  const rows: Array<[string, string]> = [
-    ["Name", q.name],
-    ["Email", q.email],
-    ["Phone", q.phone],
-    ["Product", q.product],
-    ["Quantity", q.quantity],
-  ];
-  if (q.message) rows.push(["Message", q.message]);
+  const body = `
+      <h2 style="margin: 0 0 8px; color: ${TEXT_PRIMARY}; font-size: 22px; font-weight: 700; line-height: 1.3;">New Quote Request</h2>
+      <p style="margin: 0 0 28px; color: ${TEXT_MUTED}; font-size: 15px; line-height: 1.5;">A new quote request just landed. Reply to this email to respond directly to the customer.</p>
 
-  const tableRows = rows
-    .map(
-      ([label, value]) => `
-    <tr>
-      <td style="padding: 6px 16px 6px 0; color: ${LABEL_GREY}; vertical-align: top; white-space: nowrap;"><strong>${label}</strong></td>
-      <td style="padding: 6px 0;">${escapeHtml(value)}</td>
-    </tr>`,
-    )
-    .join("");
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        ${infoRow("Customer", q.name)}
+        ${infoRow("Email", q.email)}
+        ${infoRow("Phone", q.phone)}
+        ${infoRow("Product", q.product)}
+        ${infoRow("Quantity", q.quantity, !q.message)}
+      </table>
+      ${q.message ? messageBlock(q.message, "Customer Note") : ""}
+      ${ctaButton("Open in Admin Dashboard", ADMIN_URL)}`;
 
-  return emailWrapper(`
-<h2 style="color: ${BRAND_GREEN}; margin: 0 0 16px;">New Quote Request</h2>
-<p style="margin: 0 0 20px;">A new quote request just landed in your dashboard:</p>
-<table style="border-collapse: collapse; margin: 0 0 24px;">${tableRows}</table>
-<p style="margin: 0 0 20px;">
-  <a href="${ADMIN_URL}" style="display: inline-block; padding: 10px 20px; background: ${BRAND_GREEN}; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">View in Admin Dashboard</a>
-</p>`);
+  return emailLayout({
+    preheader: `New quote: ${q.name} — ${q.quantity} of ${q.product}`,
+    body,
+  });
 }
 
 function customerEmailHtml(q: QuoteRecord): string {
-  return emailWrapper(`
-<h2 style="color: ${BRAND_GREEN}; margin: 0 0 16px;">We received your quote request</h2>
-<p style="margin: 0 0 16px;">Hi ${escapeHtml(q.name)},</p>
-<p style="margin: 0 0 16px;">
-  Thanks for your interest in <strong>${escapeHtml(q.product)}</strong>. We've received your request and will get back to you within 1 business day with pricing and delivery details.
-</p>
-<p style="margin: 0 0 16px;">
-  If you need to reach us sooner, you can message us on WhatsApp:
-  <a href="https://wa.me/639954115063" style="color: ${BRAND_GREEN};">+63 995 411 5063</a>.
-</p>
-<p style="margin: 0;">— The GreenGrows team</p>`);
+  const body = `
+      <h2 style="margin: 0 0 16px; color: ${TEXT_PRIMARY}; font-size: 24px; font-weight: 700; line-height: 1.3;">Thank you for your inquiry</h2>
+      <p style="margin: 0 0 16px; color: ${TEXT_PRIMARY}; font-size: 16px; line-height: 1.6;">
+        Hi ${escapeHtml(q.name)},
+      </p>
+      <p style="margin: 0 0 16px; color: ${TEXT_PRIMARY}; font-size: 16px; line-height: 1.6;">
+        We received your quote request and our team will review your requirements. You can expect a tailored response from us <strong>within 1 business day</strong>.
+      </p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0;">
+        <tr>
+          <td style="background-color: ${BLOCKQUOTE_BG}; border-radius: 8px; padding: 20px 24px;">
+            <p style="margin: 0 0 14px; color: ${TEXT_MUTED}; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Your Request</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding: 5px 0; color: ${TEXT_MUTED}; font-size: 14px; width: 100px;">Product</td>
+                <td style="padding: 5px 0; font-size: 15px; font-weight: 600; color: ${TEXT_PRIMARY};">${escapeHtml(q.product)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 5px 0; color: ${TEXT_MUTED}; font-size: 14px;">Quantity</td>
+                <td style="padding: 5px 0; font-size: 15px; font-weight: 600; color: ${TEXT_PRIMARY};">${escapeHtml(q.quantity)}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <p style="margin: 0 0 16px; color: ${TEXT_PRIMARY}; font-size: 16px; line-height: 1.6;">
+        Need a faster reply or want to chat about your specific crop or region? Message us on WhatsApp at
+        <a href="${WHATSAPP_URL}" style="color: ${BRAND_GREEN}; text-decoration: none; font-weight: 600;">${WHATSAPP_DISPLAY}</a>.
+      </p>
+
+      <p style="margin: 36px 0 0; color: ${TEXT_PRIMARY}; font-size: 16px; line-height: 1.5;">
+        Warm regards,<br>
+        <strong style="color: ${BRAND_GREEN};">The GreenGrows Team</strong>
+      </p>`;
+
+  return emailLayout({
+    preheader: `Your quote request for ${q.product} is being reviewed.`,
+    body,
+  });
 }
 
 serve(async (req) => {
@@ -92,21 +121,17 @@ serve(async (req) => {
 
     const q = payload.record;
 
-    // Owner notification — reply-to is the customer so the owner can hit
-    // reply directly from Gmail and respond to them.
     await sendEmail({
       to: OWNER_EMAIL,
       replyTo: q.email,
-      subject: `New quote request — ${q.product} — ${q.name}`,
+      subject: `New quote: ${q.product} — ${q.name}`,
       html: ownerEmailHtml(q),
     });
 
-    // Customer confirmation. Reply-to is the owner so customers replying
-    // to the confirmation reach a real inbox.
     await sendEmail({
       to: q.email,
       replyTo: OWNER_EMAIL,
-      subject: "We received your quote request — GreenGrows",
+      subject: `We received your quote request — GreenGrows`,
       html: customerEmailHtml(q),
     });
 
