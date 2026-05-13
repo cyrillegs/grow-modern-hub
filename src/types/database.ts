@@ -112,5 +112,12 @@ export type Database = {
         };
       };
     };
+    // Empty Views / Functions / Enums / CompositeTypes are required by recent
+    // @supabase/supabase-js versions even when you don't use them. Without
+    // them, `.update()` / `.insert()` argument types can collapse to `never`.
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+    Enums: { [_ in never]: never };
+    CompositeTypes: { [_ in never]: never };
   };
 };
