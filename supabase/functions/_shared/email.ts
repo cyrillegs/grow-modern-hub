@@ -139,15 +139,25 @@ export function infoRow(label: string, value: string, isLast = false): string {
         </tr>`;
 }
 
-/** Render a green CTA button as a table (most email-client compatible pattern). */
+/**
+ * Render a green CTA button as a centered table. The outer 100%-width
+ * table with align="center" on its cell is the "bulletproof button"
+ * pattern — works in Outlook (which ignores margin: auto on tables).
+ */
 export function ctaButton(label: string, href: string): string {
   return `
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0 0;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0 0;">
         <tr>
-          <td style="background-color: ${BRAND_GREEN}; border-radius: 6px;">
-            <a href="${href}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.01em;">
-              ${escapeHtml(label)} &rarr;
-            </a>
+          <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background-color: ${BRAND_GREEN}; border-radius: 6px;">
+                  <a href="${href}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.01em;">
+                    ${escapeHtml(label)} &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
       </table>`;
