@@ -62,6 +62,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 ### Future (not scheduled)
 
 - [ ] **Real ordering flow** — when GreenGrows has set pricing, delivery zones, payment integration (PayMongo/GCash/Stripe), BIR-compliant invoicing, and order fulfillment, design a proper checkout. Build fresh, not by reviving the removed Buy Now placeholder.
+- [ ] **Replace keepalive cron with a Playwright smoke test.** Once Playwright is added for E2E tests (see Step 8), schedule a daily smoke run in GitHub Actions that loads `/` and walks through one user action. Real DB activity (via the app) + real uptime check in one workflow. After it's live: delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) and drop the `keepalive` table (new migration). 2-in-1 — smoke test doubles as anti-pause keepalive.
 
 ---
 
