@@ -39,6 +39,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { AdminRepliesList } from "@/components/admin/AdminRepliesList";
+import { ReplyDialog } from "@/components/admin/ReplyDialog";
 import type { ContactStatus, Database } from "@/types/database";
 
 type Contact = Database["public"]["Tables"]["contacts"]["Row"];
@@ -372,6 +374,11 @@ export const ContactsPanel = () => {
                             <p className="text-sm bg-muted p-3 rounded-md whitespace-pre-wrap">{contact.message}</p>
                           </div>
 
+                          <div className="space-y-2 pt-2">
+                            <Label>Reply History</Label>
+                            <AdminRepliesList sourceTable="contacts" sourceId={contact.id} />
+                          </div>
+
                           <div className="flex gap-2 pt-4">
                             {contact.status === "new" && (
                               <>
@@ -436,6 +443,31 @@ export const ContactsPanel = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    <ReplyDialog
+                      to={contact.email}
+                      toName={contact.name}
+                      defaultSubject="Re: Your message to GreenGrows"
+                      sourceTable="contacts"
+                      sourceId={contact.id}
+                      onSentSuccessfully={() => {
+                        if (contact.status === "new") {
+                          updateStatusMutation.mutate({
+                            id: contact.id,
+                            status: "replied",
+                          });
+                        }
+                      }}
+                      trigger={
+                        <Button
+                          variant="outline"
+                          className="flex-1 md:flex-none md:w-24"
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Reply
+                        </Button>
+                      }
+                    />
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
