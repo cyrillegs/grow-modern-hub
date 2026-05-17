@@ -23,12 +23,16 @@ export default defineConfig({
     screenshot: "only-on-failure",
     headless: !!process.env.CI,
   },
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:8080",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // When PLAYWRIGHT_BASE_URL is set externally (e.g. CI daily smoke run
+  // against the deployed Vercel URL), skip the local dev server.
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: "http://localhost:8080",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120 * 1000,
+      },
   projects: [
     {
       name: "chromium",
