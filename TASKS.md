@@ -22,20 +22,27 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5b — Contacts tab on `/admin` (P1) ← **NEXT**
+### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **NEXT**
 
-The contact form now sends emails to the owner, but contact messages still aren't visible in the admin dashboard (only quotes are). Add a tabbed admin view so all leads — both quotes and contacts — surface in one place.
+The current Supabase keepalive cron writes to a dummy `keepalive` table. Replace it with a real daily smoke test that exercises the actual app, doubles as uptime check, and keeps the DB warm via real `public` schema reads.
 
-- [ ] Rename [src/pages/AdminQuotes.tsx](src/pages/AdminQuotes.tsx) → `AdminDashboard.tsx`.
-- [ ] Add shadcn `<Tabs>` at the top: **Quotes** (existing content) | **Contacts** (new).
-- [ ] Tab state persisted in URL search param (`?tab=contacts`) so bookmarks survive refresh.
-- [ ] New `AdminContacts.tsx` component mirroring AdminQuotes patterns: `useQuery` against `contacts` table, status updates (new/replied/archived) and delete via `useMutation`, stats cards as filter chips, search.
-- [ ] Tests alongside (Vitest + RTL) — at minimum a render test + a filter test.
+**Decisions already locked in (from earlier discussion):**
+- Test flow: admin auth + dashboard load. Test signs in with a dedicated e2e user, asserts dashboard renders (fires `useQuery` against `quotes` / `contacts` → real public-schema reads = keepalive). No test garbage left behind, unlike a daily contact-form submit.
+- Schedule: once per day.
+- Cutover: **two PRs**. Ship the new smoke workflow first, verify it goes green on schedule at least once, then a follow-up PR deletes `supabase-keepalive.yml` + drops the `keepalive` table via migration.
 
-### Step 5c — Misc follow-ups (P2)
+**Concrete steps:**
+- [ ] Create a dedicated `e2e@…` Supabase auth user (one-time, manual via dashboard).
+- [ ] Store creds as GitHub Actions secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`.
+- [ ] New `e2e/admin-smoke.spec.ts` — visit `/`, visit `/admin` (assert redirect), sign in, assert dashboard list renders (proves SELECT against `quotes` or `contacts` succeeded), sign out.
+- [ ] New GitHub Actions workflow `.github/workflows/daily-smoke.yml` — `schedule: cron '0 0 * * *'` + `workflow_dispatch`, installs Playwright browsers, runs the smoke spec headless against the deployed Vercel URL.
+- [ ] Wait until it has run green at least once on schedule (not just manual).
+- [ ] **Follow-up PR:** delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) + new migration to drop `public.keepalive` table.
+
+### Step 5d — Misc follow-ups (P2)
 
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
-- [ ] (Optional) Verify a real sending domain in Resend — swap `FROM_ADDRESS` secret from `onboarding@resend.dev` to `hello@<your-domain>` once you have one.
+- [ ] **Finish Resend domain verification.** Subdomain chosen: `mail.greengrows.cdlegaspi.site`. DNS records pending — add SPF + DKIM + MX (bounce) at the registrar for `cdlegaspi.site`, click Verify in Resend, then set Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"`. Until this is done, replies via `send-reply` only work to `cyrildave.legaspi@gmail.com` (Resend onboarding restriction).
 
 ### Step 6 — SEO (P2)
 
@@ -49,14 +56,15 @@ The contact form now sends emails to the owner, but contact messages still aren'
 - [ ] Decide Vercel Analytics vs GA4. Vercel is one toggle + `@vercel/analytics`; GA4 needs a tag in [index.html](index.html).
 - [ ] `npm i @sentry/react`; init in [src/main.tsx](src/main.tsx); add Vite source-map plugin.
 - [ ] Configure Sentry release tagging via Vercel build env (`VERCEL_GIT_COMMIT_SHA`).
-- [ ] Add a GitHub Actions workflow that runs `npm run test:run` + `npm run e2e:headless` on every PR.
+- [x] ~~Add a GitHub Actions workflow that runs `npm run test:run` on every PR.~~ Shipped in PR #12 ([ci.yml](.github/workflows/ci.yml)) — `npm ci` + Vitest + production build.
+- [ ] **Add `npm run lint` to the existing CI workflow** — would have caught the 3 lint errors that slipped into PR #14. ~3 lines of YAML.
+- [ ] **Add `npm run e2e:headless` (Playwright) to CI** — install browsers + headless. Currently e2e suite only runs locally. ~15 lines of YAML.
 
 ### Step 8 — Quality / cleanup (P3)
 
 - [ ] Delete stale [src/components/Navbar-backup.tsx](src/components/Navbar-backup.tsx).
 - [ ] Delete `.github/workflows/deploy.yml.txt` once Vercel deploys are stable (or move out of repo).
 - [ ] Update [CLAUDE.md](CLAUDE.md) deployment section — still describes the VPS flow which is no longer in use.
-- [ ] Delete the Supabase keepalive workflow + `keepalive` table once the site has consistent real traffic (≥1 form submission/week for a month).
 - [ ] Backfill tests: `AdminLogin` sign-in flow, `AdminQuotes` filter/search + mutations.
 - [ ] Check whether the homepage `Products` *component* (used on `/`, distinct from `/products` page) still has a fake Buy Now or quote flow — clean up consistently if so.
 - [ ] Decide whether to tighten [tsconfig.json](tsconfig.json) (`strictNullChecks`, `noImplicitAny`) — progressive opt-in by file is fine.
@@ -65,11 +73,44 @@ The contact form now sends emails to the owner, but contact messages still aren'
 ### Future (not scheduled)
 
 - [ ] **Real ordering flow** — when GreenGrows has set pricing, delivery zones, payment integration (PayMongo/GCash/Stripe), BIR-compliant invoicing, and order fulfillment, design a proper checkout. Build fresh, not by reviving the removed Buy Now placeholder.
-- [ ] **Replace keepalive cron with a Playwright smoke test.** Once Playwright is added for E2E tests (see Step 8), schedule a daily smoke run in GitHub Actions that loads `/` and walks through one user action. Real DB activity (via the app) + real uptime check in one workflow. After it's live: delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) and drop the `keepalive` table (new migration). 2-in-1 — smoke test doubles as anti-pause keepalive.
 
 ---
 
 ## Done
+
+### 2026-05-17 — Products catalog: admin CRUD + DB-backed public pages (PR #14)
+- [x] Migration 0002_products_catalog.sql: new `public.products` table (15 columns including `image_key` / `icon_key` CHECK-constrained enums, `sort_order`, `is_featured`, `is_active`), RLS (anon reads active only; authenticated admin full access), seeded with the 9 original products.
+- [x] [src/lib/products.ts](src/lib/products.ts) — `fetchAdminProducts`, `fetchPublicProducts` (with hardcoded fallback so the public site degrades gracefully if the migration hasn't been applied), `getFeaturedProducts`, slug/icon/image helpers.
+- [x] [src/components/admin/ProductsPanel.tsx](src/components/admin/ProductsPanel.tsx) — full CRUD UI: RHF + Zod, search, stats cards as filter chips, slug auto-suggest on name blur, feature/hide/delete via dropdown. Editor dialog handles add + edit.
+- [x] [src/pages/AdminDashboard.tsx](src/pages/AdminDashboard.tsx) — Products tab added as default/leftmost.
+- [x] [src/components/Products.tsx](src/components/Products.tsx) (homepage teaser) + [src/pages/Products.tsx](src/pages/Products.tsx) (full catalog) — both now read from Supabase with loading skeletons + empty states.
+- [x] [src/test/setup.ts](src/test/setup.ts) — added ResizeObserver stub for shadcn `<Select>` mount under jsdom.
+- [x] [src/components/admin/ProductsPanel.test.tsx](src/components/admin/ProductsPanel.test.tsx) — 3 tests (render+stats, filter via stats card, submit new product).
+- [x] 3 lint errors fixed (empty interfaces → type aliases in command.tsx/textarea.tsx; `require()` → ES import in tailwind.config.ts).
+- [x] `supabase/.temp/` added to .gitignore.
+- [x] `package-lock.json` regenerated on Node 24 (resolved CI `npm ci` failure; vulnerability count 15 → 2).
+- [x] **Deploy notes (post-merge):** apply 0002_products_catalog.sql + 0003_admin_replies.sql in Supabase SQL Editor; `supabase functions deploy send-reply`.
+
+### 2026-05-13 — In-app Reply modal + admin_replies log (PR #13)
+- [x] Migration 0003_admin_replies.sql: new table logging every outgoing admin reply with `(source_table, source_id)` pointer back to the quote/contact. RLS authenticated-only.
+- [x] Edge Function [send-reply](supabase/functions/send-reply/index.ts) — browser-invoked. Verifies caller is a signed-in admin (not just anon-key holder), sends via Resend with `reply_to = OWNER_EMAIL`, logs to admin_replies. CORS configured.
+- [x] [ReplyDialog.tsx](src/components/admin/ReplyDialog.tsx) — shadcn Dialog + RHF + Zod, pre-filled greeting, Send calls `supabase.functions.invoke("send-reply")`.
+- [x] [AdminRepliesList.tsx](src/components/admin/AdminRepliesList.tsx) — per-row collapsible history shown in the View dialog of both panels.
+- [x] QuotesPanel + ContactsPanel — replaced prior Reply affordance with ReplyDialog trigger; auto-marks row as `replied` (contacts) / `processed` (quotes) on first send.
+- [x] 5 tests on ReplyDialog (open + pre-fill, validation, send success, send error, partial-success warning).
+- [x] Obsoleted PR #11 (Gmail-link Reply) which was closed without merging.
+
+### 2026-05-13 — Step 7 (partial): CI workflow for PRs (PR #12)
+- [x] [.github/workflows/ci.yml](.github/workflows/ci.yml) — runs on PR-to-main and push-to-main.
+- [x] Node 20 + npm cache → `npm ci` → `npm run test:run` (Vitest) → `npm run build` with Supabase secrets injected.
+- [x] Surfaces as the "Unit tests + production build" check on every PR.
+- [ ] Still missing in CI: `npm run lint` + `npm run e2e:headless` (see Step 7 remaining).
+
+### 2026-05-13 — Step 5b: Contacts tab on /admin (PR #10)
+- [x] Renamed [src/pages/AdminQuotes.tsx](src/pages/AdminQuotes.tsx) → `AdminDashboard.tsx` with shadcn `<Tabs>` — Quotes (existing) | Contacts (new).
+- [x] Tab state persisted in URL search param (`?tab=contacts`) so bookmarks survive refresh.
+- [x] New `ContactsPanel.tsx` mirroring QuotesPanel patterns: `useQuery` against `contacts`, status updates (new/replied/archived) + delete via `useMutation`, stats cards as filter chips, search.
+- [x] Tests alongside (Vitest + RTL).
 
 ### 2026-05-13 — Step 5: Resend email notifications (PR #8)
 - [x] Supabase Edge Functions `notify-quote` and `notify-contact` deployed and triggered by Database Webhooks on row INSERT.
