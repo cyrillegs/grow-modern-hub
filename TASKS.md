@@ -22,24 +22,26 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **NEXT**
+### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **IN PROGRESS**
 
-The current Supabase keepalive cron writes to a dummy `keepalive` table. Replace it with a real daily smoke test that exercises the actual app, doubles as uptime check, and keeps the DB warm via real `public` schema reads.
+PR 1 (smoke workflow) shipped in PR #15. Waiting for the cron to fire green on schedule before the cleanup PR can land.
 
-**Decisions already locked in (from earlier discussion):**
-- Test flow: admin auth + dashboard load. Test signs in with a dedicated e2e user, asserts dashboard renders (fires `useQuery` against `quotes` / `contacts` → real public-schema reads = keepalive). No test garbage left behind, unlike a daily contact-form submit.
-- Schedule: once per day.
-- Cutover: **two PRs**. Ship the new smoke workflow first, verify it goes green on schedule at least once, then a follow-up PR deletes `supabase-keepalive.yml` + drops the `keepalive` table via migration.
+**Decisions locked in:**
+- Test flow: admin auth + dashboard load. Test signs in with a dedicated e2e user, clicks the Quotes tab → fires SELECT against `quotes` (public-schema read = keepalive). No test garbage left behind, unlike a daily contact-form submit.
+- Schedule: 00:00 UTC daily.
+- Cutover: **two PRs**. Ship smoke workflow first, verify green on schedule at least once, then cleanup PR.
 
 **Concrete steps:**
-- [ ] Create a dedicated `e2e@…` Supabase auth user (one-time, manual via dashboard).
-- [ ] Store creds as GitHub Actions secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`.
-- [ ] New `e2e/admin-smoke.spec.ts` — visit `/`, visit `/admin` (assert redirect), sign in, assert dashboard list renders (proves SELECT against `quotes` or `contacts` succeeded), sign out.
-- [ ] New GitHub Actions workflow `.github/workflows/daily-smoke.yml` — `schedule: cron '0 0 * * *'` + `workflow_dispatch`, installs Playwright browsers, runs the smoke spec headless against the deployed Vercel URL.
-- [ ] Wait until it has run green at least once on schedule (not just manual).
-- [ ] **Follow-up PR:** delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) + new migration to drop `public.keepalive` table.
+- [x] Create a dedicated `e2e@…` Supabase auth user (manual via dashboard).
+- [x] Store creds as GitHub Actions secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`.
+- [x] New [e2e/admin-smoke.spec.ts](e2e/admin-smoke.spec.ts) — visits `/`, asserts auth gate, signs in, asserts dashboard mounts, clicks Quotes tab and asserts no "failed to load" banner, signs out. Skips cleanly if creds absent so `npm run e2e` still works locally.
+- [x] New [.github/workflows/daily-smoke.yml](.github/workflows/daily-smoke.yml) — cron `0 0 * * *` + `workflow_dispatch`, chromium with `--with-deps`, uploads HTML report on failure.
+- [x] [playwright.config.ts](playwright.config.ts) — `webServer` skipped when `PLAYWRIGHT_BASE_URL` is set externally (CI hits deployed URL, no local server needed).
+- [ ] **Verify it works** — manually trigger the workflow once via Actions tab → "Daily smoke" → "Run workflow" to confirm secrets + URL are correct.
+- [ ] **Wait until it has run green at least once on schedule** (not just manual). First cron fire: 00:00 UTC daily.
+- [ ] **Follow-up PR (cleanup):** delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) + new migration to drop `public.keepalive` table.
 
-### Step 5d — Misc follow-ups (P2)
+### Step 5d — Misc follow-ups (P2) ← **NEXT** (parallel to 5c cron wait)
 
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
 - [ ] **Finish Resend domain verification.** Subdomain chosen: `mail.greengrows.cdlegaspi.site`. DNS records pending — add SPF + DKIM + MX (bounce) at the registrar for `cdlegaspi.site`, click Verify in Resend, then set Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"`. Until this is done, replies via `send-reply` only work to `cyrildave.legaspi@gmail.com` (Resend onboarding restriction).
@@ -77,6 +79,13 @@ The current Supabase keepalive cron writes to a dummy `keepalive` table. Replace
 ---
 
 ## Done
+
+### 2026-05-17 — Step 5c part 1: Daily Playwright smoke workflow (PR #15)
+- [x] [e2e/admin-smoke.spec.ts](e2e/admin-smoke.spec.ts) — single spec: homepage uptime, `/admin` redirect-to-login gate, sign-in with `E2E_ADMIN_*` env vars, dashboard mount, Quotes tab SELECT (= keepalive activity), sign-out.
+- [x] [.github/workflows/daily-smoke.yml](.github/workflows/daily-smoke.yml) — cron `0 0 * * *` + `workflow_dispatch`. Installs chromium with `--with-deps`, hits `https://grow-modern-hub.vercel.app` via `PLAYWRIGHT_BASE_URL`, uploads Playwright HTML report on failure (7 day retention).
+- [x] [playwright.config.ts](playwright.config.ts) — `webServer` now conditional on `PLAYWRIGHT_BASE_URL`. Local `npm run e2e` unchanged; CI smoke run skips the local dev server.
+- [x] Dedicated Supabase `e2e@…` user + `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` GitHub Actions secrets (manual, one-time setup).
+- [ ] **Still pending:** cron fire green at least once on schedule (see Step 5c for cleanup PR).
 
 ### 2026-05-17 — Products catalog: admin CRUD + DB-backed public pages (PR #14)
 - [x] Migration 0002_products_catalog.sql: new `public.products` table (15 columns including `image_key` / `icon_key` CHECK-constrained enums, `sort_order`, `is_featured`, `is_active`), RLS (anon reads active only; authenticated admin full access), seeded with the 9 original products.
