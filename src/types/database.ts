@@ -5,6 +5,8 @@
 export type QuoteStatus = "pending" | "processed" | "cancelled";
 export type ContactStatus = "new" | "replied" | "archived";
 export type ReplySourceTable = "quotes" | "contacts";
+export type ProductImageKey = "organic" | "liquid" | "specialty";
+export type ProductIconKey = "leaf" | "droplets" | "sprout";
 
 export type Database = {
   public: {
@@ -40,6 +42,7 @@ export type Database = {
           status?: ContactStatus;
           admin_notes?: string | null;
         };
+        Relationships: [];
       };
       quotes: {
         Row: {
@@ -78,6 +81,61 @@ export type Database = {
           status?: QuoteStatus;
           admin_notes?: string | null;
         };
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          id: string;
+          created_at: string;
+          name: string;
+          slug: string;
+          description: string;
+          features: string[];
+          npk: string;
+          application: string;
+          coverage: string;
+          price: string;
+          image_key: ProductImageKey;
+          icon_key: ProductIconKey;
+          sort_order: number;
+          is_featured: boolean;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          name: string;
+          slug: string;
+          description: string;
+          features?: string[];
+          npk: string;
+          application: string;
+          coverage: string;
+          price: string;
+          image_key?: ProductImageKey;
+          icon_key?: ProductIconKey;
+          sort_order?: number;
+          is_featured?: boolean;
+          is_active?: boolean;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          name?: string;
+          slug?: string;
+          description?: string;
+          features?: string[];
+          npk?: string;
+          application?: string;
+          coverage?: string;
+          price?: string;
+          image_key?: ProductImageKey;
+          icon_key?: ProductIconKey;
+          sort_order?: number;
+          is_featured?: boolean;
+          is_active?: boolean;
+        };
+        Relationships: [];
       };
       admin_replies: {
         Row: {
@@ -110,6 +168,7 @@ export type Database = {
           body?: string;
           sent_by_user_id?: string | null;
         };
+        Relationships: [];
       };
     };
     // Empty Views / Functions / Enums / CompositeTypes are required by recent

@@ -5,13 +5,14 @@ import { LogOut } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProductsPanel } from "@/components/admin/ProductsPanel";
 import { QuotesPanel } from "@/components/admin/QuotesPanel";
 import { ContactsPanel } from "@/components/admin/ContactsPanel";
 
-type DashboardTab = "quotes" | "contacts";
+type DashboardTab = "quotes" | "contacts" | "products";
 
 const isValidTab = (value: string | null): value is DashboardTab =>
-  value === "quotes" || value === "contacts";
+  value === "quotes" || value === "contacts" || value === "products";
 
 const AdminDashboard = () => {
   const { signOut } = useAuth();
@@ -37,7 +38,7 @@ const AdminDashboard = () => {
             <div>
               <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
               <p className="text-muted-foreground">
-                Manage quote requests and contact messages from one place.
+                Manage products, quote requests, and contact messages from one place.
               </p>
             </div>
             <Button variant="outline" onClick={signOut} className="gap-2 self-start">
@@ -49,9 +50,13 @@ const AdminDashboard = () => {
           {/* Tabs */}
           <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="mb-6">
+              <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="quotes">Quotes</TabsTrigger>
               <TabsTrigger value="contacts">Contacts</TabsTrigger>
             </TabsList>
+            <TabsContent value="products">
+              <ProductsPanel />
+            </TabsContent>
             <TabsContent value="quotes">
               <QuotesPanel />
             </TabsContent>
