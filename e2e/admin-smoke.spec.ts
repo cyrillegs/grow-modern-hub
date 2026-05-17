@@ -35,9 +35,12 @@ test("daily smoke: homepage up, admin signs in, dashboard loads, sign out works"
     page.getByRole("heading", { name: /admin sign in/i }),
   ).toBeVisible();
 
-  // 3. Sign in with the dedicated e2e user
-  await page.getByLabel(/email/i).fill(E2E_ADMIN_EMAIL!);
-  await page.getByLabel(/password/i).fill(E2E_ADMIN_PASSWORD!);
+  // 3. Sign in with the dedicated e2e user.
+  // Target inputs by type attribute — more reliable than getByLabel here,
+  // which can pick up the eye-icon toggle button's aria-label or fail to
+  // resolve the input when there are multiple elements near "password".
+  await page.locator('input[type="email"]').fill(E2E_ADMIN_EMAIL!);
+  await page.locator('input[type="password"]').fill(E2E_ADMIN_PASSWORD!);
   await page.getByRole("button", { name: /^sign in$/i }).click();
 
   // 4. Dashboard mounts — proves auth succeeded and SPA hydrated

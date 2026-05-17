@@ -1,4 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+// Load .env.local so specs that need creds (e.g. admin-smoke.spec.ts) can read
+// process.env.E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD without hand-setting them
+// every shell session. .env.local is gitignored (*.local); CI injects the
+// same vars via the workflow env: block, which takes precedence over this.
+dotenv.config({ path: ".env.local" });
 
 /**
  * Playwright config for GreenGrows E2E tests.
