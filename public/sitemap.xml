@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static sitemap. Public marketing routes only — /admin* is excluded
+  (covered by Disallow in robots.txt plus per-page noindex meta).
+  To add <lastmod> dates later, regenerate or hand-edit per URL.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://grow-modern-hub.vercel.app/</loc>
+    <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://grow-modern-hub.vercel.app/products</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+</urlset>

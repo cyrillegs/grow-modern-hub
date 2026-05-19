@@ -14,6 +14,7 @@ import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { RequestQuoteDialog } from "@/components/RequestQuoteDialog";
+import { PageMeta } from "@/components/seo/PageMeta";
 import {
   fetchPublicProducts,
   getProductIcon,
@@ -21,6 +22,27 @@ import {
   PRODUCTS_QUERY_KEY,
 } from "@/lib/products";
 import type { Product } from "@/lib/products";
+import { BRAND_NAME, buildAbsoluteUrl, buildCanonical } from "@/lib/seo";
+
+const buildProductsItemListJsonLd = (products: Product[]) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: products.map((product, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    item: {
+      "@type": "Product",
+      name: product.name,
+      description: product.description,
+      image: buildAbsoluteUrl(getProductImageSrc(product.image_key)),
+      brand: {
+        "@type": "Brand",
+        name: BRAND_NAME,
+      },
+      url: buildCanonical("/products"),
+    },
+  })),
+});
 
 const Products = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
@@ -30,8 +52,21 @@ const Products = () => {
     queryFn: fetchPublicProducts,
   });
 
+  const hasProducts = (products?.length ?? 0) > 0;
+
   return (
     <div className="min-h-screen">
+      <PageMeta
+        path="/products"
+        title="Products | GreenGrows Fertilizers"
+        description="Browse our full catalog of NPK blends, urea, organic compost, and specialty fertilizers — quality solutions for Filipino farms and agribusinesses."
+      >
+        {hasProducts && (
+          <script type="application/ld+json">
+            {JSON.stringify(buildProductsItemListJsonLd(products!))}
+          </script>
+        )}
+      </PageMeta>
       <Navbar />
       <main className="pt-16">
         <section className="py-20 bg-muted/30" ref={headerRef}>

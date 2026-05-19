@@ -24,6 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { useState } from "react";
+import { PageMeta } from "@/components/seo/PageMeta";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Please enter a valid email"),
@@ -71,6 +72,7 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+      <PageMeta path="/admin/login" title="Admin Sign In | GreenGrows" noindex />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">

@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProductsPanel } from "@/components/admin/ProductsPanel";
 import { QuotesPanel } from "@/components/admin/QuotesPanel";
 import { ContactsPanel } from "@/components/admin/ContactsPanel";
+import { PageMeta } from "@/components/seo/PageMeta";
 
 type DashboardTab = "quotes" | "contacts" | "products";
 
@@ -30,6 +31,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
+      <PageMeta path="/admin" title="Admin Dashboard | GreenGrows" noindex />
       <Navbar />
       <main className="pt-16">
         <div className="container px-4 py-8 max-w-7xl mx-auto">
