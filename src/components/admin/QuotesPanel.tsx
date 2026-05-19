@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -89,6 +90,9 @@ export const QuotesPanel = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | QuoteStatus>("all");
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const targetId = searchParams.get("id");
+  const handledIdRef = useRef<string | null>(null);
 
   const { data: quotes, isLoading, isError } = useQuery<Quote[]>({
     queryKey: QUOTES_QUERY_KEY,
@@ -101,6 +105,18 @@ export const QuotesPanel = () => {
       return data ?? [];
     },
   });
+
+  // Auto-open the matching quote's detail modal when navigated to via ?id=
+  // (e.g. from the "View this quote" CTA in the notify-quote email).
+  useEffect(() => {
+    if (!targetId || !quotes) return;
+    if (handledIdRef.current === targetId) return;
+    const match = quotes.find((q) => q.id === targetId);
+    if (!match) return;
+    setSelectedQuote(match);
+    setIsDetailDialogOpen(true);
+    handledIdRef.current = targetId;
+  }, [targetId, quotes]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: QuoteStatus }) => {

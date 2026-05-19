@@ -10,7 +10,7 @@ import {
   ADMIN_URL,
   BLOCKQUOTE_BG,
   BRAND_GREEN,
-  OWNER_EMAIL,
+  OWNER_EMAILS,
   TEXT_MUTED,
   TEXT_PRIMARY,
   WHATSAPP_DISPLAY,
@@ -55,7 +55,7 @@ function ownerEmailHtml(q: QuoteRecord): string {
         ${infoRow("Quantity", q.quantity, !q.message)}
       </table>
       ${q.message ? messageBlock(q.message, "Customer Note") : ""}
-      ${ctaButton("Open in Admin Dashboard", ADMIN_URL)}`;
+      ${ctaButton("View this quote", `${ADMIN_URL}?tab=quotes&id=${encodeURIComponent(q.id)}`)}`;
 
   return emailLayout({
     preheader: `New quote: ${q.name} — ${q.quantity} of ${q.product}`,
@@ -122,7 +122,7 @@ serve(async (req) => {
     const q = payload.record;
 
     await sendEmail({
-      to: OWNER_EMAIL,
+      to: OWNER_EMAILS,
       replyTo: q.email,
       subject: `New quote: ${q.product} — ${q.name}`,
       html: ownerEmailHtml(q),
@@ -130,7 +130,7 @@ serve(async (req) => {
 
     await sendEmail({
       to: q.email,
-      replyTo: OWNER_EMAIL,
+      replyTo: OWNER_EMAILS,
       subject: `We received your quote request — GreenGrows`,
       html: customerEmailHtml(q),
     });

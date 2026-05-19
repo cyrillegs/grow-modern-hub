@@ -56,6 +56,14 @@ supabase secrets set ADMIN_URL=https://grow-modern-hub.vercel.app/admin
 supabase secrets set FROM_ADDRESS="GreenGrows <onboarding@resend.dev>"
 ```
 
+`OWNER_EMAIL` accepts a comma-separated list to notify multiple recipients (no spaces required, but they're trimmed if present):
+
+```bash
+supabase secrets set OWNER_EMAIL="owner1@example.com,owner2@example.com,owner3@example.com"
+```
+
+All listed addresses will receive owner notifications for new quotes/contacts and will be on the Reply-To header of customer replies sent from the admin dashboard.
+
 ### 4. Deploy the functions
 
 ```bash
