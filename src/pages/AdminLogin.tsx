@@ -40,8 +40,12 @@ const AdminLogin = () => {
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
 
+  // Preserve the full location (pathname + search + hash) so a deep-link
+  // like /admin?tab=contacts&id=<uuid> survives the sign-in round-trip.
   const from =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? "/admin";
+    (location.state as {
+      from?: { pathname?: string; search?: string; hash?: string };
+    } | null)?.from ?? { pathname: "/admin" };
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
