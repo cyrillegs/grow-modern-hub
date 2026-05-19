@@ -10,7 +10,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { OWNER_EMAIL, sendEmail } from "../_shared/email.ts";
+import { OWNER_EMAILS, sendEmail } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -103,7 +103,7 @@ serve(async (req) => {
   try {
     await sendEmail({
       to: payload.to,
-      replyTo: OWNER_EMAIL,
+      replyTo: OWNER_EMAILS,
       subject: payload.subject,
       html: bodyToHtml(payload.body),
     });

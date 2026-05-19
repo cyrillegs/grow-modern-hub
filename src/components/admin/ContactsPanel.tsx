@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
@@ -88,6 +89,9 @@ export const ContactsPanel = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | ContactStatus>("all");
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const targetId = searchParams.get("id");
+  const handledIdRef = useRef<string | null>(null);
 
   const { data: contacts, isLoading, isError } = useQuery<Contact[]>({
     queryKey: CONTACTS_QUERY_KEY,
@@ -100,6 +104,18 @@ export const ContactsPanel = () => {
       return data ?? [];
     },
   });
+
+  // Auto-open the matching contact's detail modal when navigated to via ?id=
+  // (e.g. from the "View this message" CTA in the notify-contact email).
+  useEffect(() => {
+    if (!targetId || !contacts) return;
+    if (handledIdRef.current === targetId) return;
+    const match = contacts.find((c) => c.id === targetId);
+    if (!match) return;
+    setSelectedContact(match);
+    setIsDetailDialogOpen(true);
+    handledIdRef.current = targetId;
+  }, [targetId, contacts]);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ContactStatus }) => {

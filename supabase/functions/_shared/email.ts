@@ -6,7 +6,14 @@
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_ADDRESS = Deno.env.get("FROM_ADDRESS") ?? "GreenGrows <onboarding@resend.dev>";
 
-export const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "cyrildave.legaspi@gmail.com";
+// OWNER_EMAIL accepts a single address or a comma-separated list — every
+// address receives owner-facing notifications and is on the Reply-To header
+// for replies sent back from customers.
+const OWNER_EMAIL_RAW = Deno.env.get("OWNER_EMAIL") ?? "cyrildave.legaspi@gmail.com";
+export const OWNER_EMAILS: string[] = OWNER_EMAIL_RAW
+  .split(",")
+  .map((s) => s.trim())
+  .filter((s) => s.length > 0);
 export const ADMIN_URL = Deno.env.get("ADMIN_URL") ?? "https://grow-modern-hub.vercel.app/admin";
 export const WHATSAPP_URL = "https://wa.me/639954115063";
 export const WHATSAPP_DISPLAY = "+63 995 411 5063";
@@ -25,16 +32,21 @@ export const TEXT_MUTED = "#6b7280";
 export const TEXT_SUBTLE = "#9ca3af";
 
 type SendEmailArgs = {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
-  replyTo?: string;
+  replyTo?: string | string[];
 };
 
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailArgs): Promise<void> {
   if (!RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not configured");
   }
+
+  const toList = Array.isArray(to) ? to : [to];
+  const replyToList = replyTo === undefined
+    ? undefined
+    : Array.isArray(replyTo) ? replyTo : [replyTo];
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -44,8 +56,8 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailArgs): 
     },
     body: JSON.stringify({
       from: FROM_ADDRESS,
-      to: [to],
-      reply_to: replyTo,
+      to: toList,
+      reply_to: replyToList,
       subject,
       html,
     }),

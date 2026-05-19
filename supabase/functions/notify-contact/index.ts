@@ -7,7 +7,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import {
   ADMIN_URL,
-  OWNER_EMAIL,
+  OWNER_EMAILS,
   TEXT_MUTED,
   TEXT_PRIMARY,
   ctaButton,
@@ -47,7 +47,7 @@ function ownerEmailHtml(c: ContactRecord): string {
         ${infoRow("Phone", phone, true)}
       </table>
       ${messageBlock(c.message)}
-      ${ctaButton("Open in Admin Dashboard", ADMIN_URL)}`;
+      ${ctaButton("View this message", `${ADMIN_URL}?tab=contacts&id=${encodeURIComponent(c.id)}`)}`;
 
   return emailLayout({
     preheader: `New contact from ${c.name}`,
@@ -70,7 +70,7 @@ serve(async (req) => {
     const c = payload.record;
 
     await sendEmail({
-      to: OWNER_EMAIL,
+      to: OWNER_EMAILS,
       replyTo: c.email,
       subject: `New contact message — ${c.name}`,
       html: ownerEmailHtml(c),
