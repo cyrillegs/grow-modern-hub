@@ -22,9 +22,9 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **IN PROGRESS**
+### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **NEXT** (cleanup PR only)
 
-PR 1 (smoke workflow) shipped in PR #15. Waiting for the cron to fire green on schedule before the cleanup PR can land.
+Smoke workflow shipped in PR #15 + selector fix in PR #16. Manual + scheduled cron runs have both gone green. The cleanup PR is all that remains.
 
 **Decisions locked in:**
 - Test flow: admin auth + dashboard load. Test signs in with a dedicated e2e user, clicks the Quotes tab → fires SELECT against `quotes` (public-schema read = keepalive). No test garbage left behind, unlike a daily contact-form submit.
@@ -37,11 +37,11 @@ PR 1 (smoke workflow) shipped in PR #15. Waiting for the cron to fire green on s
 - [x] New [e2e/admin-smoke.spec.ts](e2e/admin-smoke.spec.ts) — visits `/`, asserts auth gate, signs in, asserts dashboard mounts, clicks Quotes tab and asserts no "failed to load" banner, signs out. Skips cleanly if creds absent so `npm run e2e` still works locally.
 - [x] New [.github/workflows/daily-smoke.yml](.github/workflows/daily-smoke.yml) — cron `0 0 * * *` + `workflow_dispatch`, chromium with `--with-deps`, uploads HTML report on failure.
 - [x] [playwright.config.ts](playwright.config.ts) — `webServer` skipped when `PLAYWRIGHT_BASE_URL` is set externally (CI hits deployed URL, no local server needed).
-- [ ] **Verify it works** — manually trigger the workflow once via Actions tab → "Daily smoke" → "Run workflow" to confirm secrets + URL are correct.
-- [ ] **Wait until it has run green at least once on schedule** (not just manual). First cron fire: 00:00 UTC daily.
+- [x] **Verified it works** — workflow triggered manually via Actions tab; secrets + URL confirmed correct.
+- [x] **Cron has fired green at least once on schedule** (not just manual).
 - [ ] **Follow-up PR (cleanup):** delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) + new migration to drop `public.keepalive` table.
 
-### Step 5d — Misc follow-ups (P2) ← **NEXT** (parallel to 5c cron wait)
+### Step 5d — Misc follow-ups (P2)
 
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
 - [ ] **Finish Resend domain verification.** Subdomain chosen: `mail.greengrows.cdlegaspi.site`. DNS records pending — add SPF + DKIM + MX (bounce) at the registrar for `cdlegaspi.site`, click Verify in Resend, then set Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"`. Until this is done, replies via `send-reply` only work to `cyrildave.legaspi@gmail.com` (Resend onboarding restriction).
