@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Leaf } from "lucide-react";
 import { useState } from "react";
 import { PageMeta } from "@/components/seo/PageMeta";
 
@@ -71,12 +71,12 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 px-4">
       <PageMeta path="/admin/login" title="Admin Sign In | GreenGrows" noindex />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary" />
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary flex items-center justify-center mb-4">
+            <Leaf className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle>Admin Sign In</CardTitle>
           <CardDescription>
@@ -149,6 +149,13 @@ const AdminLogin = () => {
           </Form>
         </CardContent>
       </Card>
+      <Link
+        to="/"
+        className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to home
+      </Link>
     </div>
   );
 };
