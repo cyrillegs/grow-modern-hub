@@ -22,36 +22,11 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5c — Daily Playwright smoke + keepalive replacement (P1) ← **NEXT** (cleanup PR only)
-
-Smoke workflow shipped in PR #15 + selector fix in PR #16. Manual + scheduled cron runs have both gone green. The cleanup PR is all that remains.
-
-**Decisions locked in:**
-- Test flow: admin auth + dashboard load. Test signs in with a dedicated e2e user, clicks the Quotes tab → fires SELECT against `quotes` (public-schema read = keepalive). No test garbage left behind, unlike a daily contact-form submit.
-- Schedule: 00:00 UTC daily.
-- Cutover: **two PRs**. Ship smoke workflow first, verify green on schedule at least once, then cleanup PR.
-
-**Concrete steps:**
-- [x] Create a dedicated `e2e@…` Supabase auth user (manual via dashboard).
-- [x] Store creds as GitHub Actions secrets: `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`.
-- [x] New [e2e/admin-smoke.spec.ts](e2e/admin-smoke.spec.ts) — visits `/`, asserts auth gate, signs in, asserts dashboard mounts, clicks Quotes tab and asserts no "failed to load" banner, signs out. Skips cleanly if creds absent so `npm run e2e` still works locally.
-- [x] New [.github/workflows/daily-smoke.yml](.github/workflows/daily-smoke.yml) — cron `0 0 * * *` + `workflow_dispatch`, chromium with `--with-deps`, uploads HTML report on failure.
-- [x] [playwright.config.ts](playwright.config.ts) — `webServer` skipped when `PLAYWRIGHT_BASE_URL` is set externally (CI hits deployed URL, no local server needed).
-- [x] **Verified it works** — workflow triggered manually via Actions tab; secrets + URL confirmed correct.
-- [x] **Cron has fired green at least once on schedule** (not just manual).
-- [ ] **Follow-up PR (cleanup):** delete [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) + new migration to drop `public.keepalive` table.
-
-### Step 5d — Misc follow-ups (P2)
+### Step 5d — Misc follow-ups (P2) ← **NEXT**
 
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
 - [ ] **Finish Resend domain verification.** Subdomain chosen: `mail.greengrows.cdlegaspi.site`. DNS records pending — add SPF + DKIM + MX (bounce) at the registrar for `cdlegaspi.site`, click Verify in Resend, then set Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"`. Until this is done, replies via `send-reply` only work to `cyrildave.legaspi@gmail.com` (Resend onboarding restriction).
-
-### Step 6 — SEO (P2)
-
-- [ ] `npm i react-helmet-async`; wrap `App` in `<HelmetProvider>` and add `<Helmet>` per page.
-- [ ] Replace placeholder OG image in [index.html:25](index.html#L25) and [index.html:31](index.html#L31) (still points at `lovable.dev`).
-- [ ] Add `public/robots.txt` and `public/sitemap.xml`.
-- [ ] Add Organization + Product JSON-LD on `/` and `/products`.
+- [ ] **Apply migration `0004_drop_keepalive.sql`** in the Supabase SQL editor (or via CLI). PR #18 added the migration but it's still pending on the live database.
 
 ### Step 7 — Analytics, error tracking, CI (P2)
 
@@ -79,6 +54,26 @@ Smoke workflow shipped in PR #15 + selector fix in PR #16. Manual + scheduled cr
 ---
 
 ## Done
+
+### 2026-05-19 — Step 5c (cleanup): drop keepalive workflow + table (PR #18)
+- [x] Deleted [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) (the Mon/Wed/Fri curl-against-keepalive cron).
+- [x] New migration [0004_drop_keepalive.sql](supabase/migrations/0004_drop_keepalive.sql) — `drop table if exists public.keepalive;` (cascades to RLS policy).
+- [x] No app code dependencies on the table — confirmed via grep before deletion.
+- [ ] **Post-merge deploy step still pending:** apply 0004_drop_keepalive.sql in Supabase SQL editor to actually drop the live table (tracked in Step 5d).
+- [x] Closes the Step 5c two-PR cutover. Daily smoke (PR #15/16) is now the sole keepalive mechanism.
+
+### 2026-05-19 — Step 6: SEO foundation (PR #17)
+- [x] Brand reconciliation: "GreenGrow" → "GreenGrows" across [index.html](index.html), meta tags, and OG copy.
+- [x] [react-helmet-async](https://www.npmjs.com/package/react-helmet-async) added as a runtime dep; [HelmetProvider](src/App.tsx) wraps the entire provider tree.
+- [x] [src/lib/seo.ts](src/lib/seo.ts) — brand + URL constants (SITE_URL, BRAND_NAME, default title/description/og-image, WhatsApp helpers, buildCanonical, buildAbsoluteUrl).
+- [x] [src/components/seo/PageMeta.tsx](src/components/seo/PageMeta.tsx) — reusable Helmet wrapper. Emits title, meta description, canonical, og:* and twitter:* tags. Supports noindex + children slot for JSON-LD.
+- [x] [src/pages/Index.tsx](src/pages/Index.tsx) — PageMeta with defaults + Organization JSON-LD (name, url, logo, email, phone, areaServed=PH, sameAs WhatsApp).
+- [x] [src/pages/Products.tsx](src/pages/Products.tsx) — custom title/description + dynamic ItemList JSON-LD over fetched products (no `offers` field since pricing is B2B-indicative).
+- [x] Admin + 404 routes — `<PageMeta noindex />` on [AdminLogin](src/pages/AdminLogin.tsx), [AdminDashboard](src/pages/AdminDashboard.tsx), [NotFound](src/pages/NotFound.tsx).
+- [x] Replaced lovable.dev placeholder OG image with [public/og-image.jpg](public/og-image.jpg) (copy of hero-agriculture.jpg, swappable later).
+- [x] New [public/sitemap.xml](public/sitemap.xml) — / + /products, /admin* excluded.
+- [x] [public/robots.txt](public/robots.txt) — added Disallow: /admin + Sitemap directive.
+- [x] [docs/seo-plan.md](docs/seo-plan.md) — implementation plan kept in-repo for reference.
 
 ### 2026-05-17 — Step 5c part 1: Daily Playwright smoke workflow (PR #15)
 - [x] [e2e/admin-smoke.spec.ts](e2e/admin-smoke.spec.ts) — single spec: homepage uptime, `/admin` redirect-to-login gate, sign-in with `E2E_ADMIN_*` env vars, dashboard mount, Quotes tab SELECT (= keepalive activity), sign-out.
