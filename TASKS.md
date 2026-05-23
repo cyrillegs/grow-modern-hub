@@ -24,7 +24,6 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ### Step 5d — Misc follow-ups (P2) ← **NEXT**
 
-- [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
 - [ ] **Apply migration `0004_drop_keepalive.sql`** in the Supabase SQL editor (or via CLI). PR #18 added the migration but it's still pending on the live database.
 
 ### Step 7 — Analytics, error tracking, CI (P2)
@@ -48,6 +47,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ### Future (not scheduled)
 
+- [ ] **Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx)** — still ships with the scaffold defaults (`info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`). Blocked on the business having a real published email, phone, and physical address — until then, customers reach the owner via the contact form + WhatsApp FAB, which work today.
 - [ ] **Real ordering flow** — when GreenGrows has set pricing, delivery zones, payment integration (PayMongo/GCash/Stripe), BIR-compliant invoicing, and order fulfillment, design a proper checkout. Build fresh, not by reviving the removed Buy Now placeholder.
 - [ ] **Google OAuth on `/admin/login`** — add "Sign in with Google" alongside email+password to skip password-reset friction. Security model: rely on the existing "Allow new users to sign up" = OFF setting, which blocks OAuth signup too (only emails already in `auth.users` can complete the flow), so no client-side allowlist or Auth Hook is needed. Prereqs before coding: (a) owner row in Supabase → Auth → Users uses the Gmail address that will be used for OAuth; (b) "Allow new users to sign up" is still OFF; (c) Google Cloud OAuth Client ID created with redirect URI `https://aipegsofrutdhetkstyw.supabase.co/auth/v1/callback`; (d) Client ID + Secret pasted into Supabase → Auth → Providers → Google. Code change is small: a button in [AdminLogin.tsx](src/pages/AdminLogin.tsx) calling `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })`.
 
