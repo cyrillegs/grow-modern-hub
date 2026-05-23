@@ -25,7 +25,6 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 ### Step 5d — Misc follow-ups (P2) ← **NEXT**
 
 - [ ] Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx) (still `info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`).
-- [ ] **Finish Resend domain verification.** Subdomain chosen: `mail.greengrows.cdlegaspi.site`. DNS records pending — add SPF + DKIM + MX (bounce) at the registrar for `cdlegaspi.site`, click Verify in Resend, then set Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"`. Until this is done, replies via `send-reply` only work to `cyrildave.legaspi@gmail.com` (Resend onboarding restriction).
 - [ ] **Apply migration `0004_drop_keepalive.sql`** in the Supabase SQL editor (or via CLI). PR #18 added the migration but it's still pending on the live database.
 
 ### Step 7 — Analytics, error tracking, CI (P2)
@@ -50,10 +49,18 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 ### Future (not scheduled)
 
 - [ ] **Real ordering flow** — when GreenGrows has set pricing, delivery zones, payment integration (PayMongo/GCash/Stripe), BIR-compliant invoicing, and order fulfillment, design a proper checkout. Build fresh, not by reviving the removed Buy Now placeholder.
+- [ ] **Google OAuth on `/admin/login`** — add "Sign in with Google" alongside email+password to skip password-reset friction. Security model: rely on the existing "Allow new users to sign up" = OFF setting, which blocks OAuth signup too (only emails already in `auth.users` can complete the flow), so no client-side allowlist or Auth Hook is needed. Prereqs before coding: (a) owner row in Supabase → Auth → Users uses the Gmail address that will be used for OAuth; (b) "Allow new users to sign up" is still OFF; (c) Google Cloud OAuth Client ID created with redirect URI `https://aipegsofrutdhetkstyw.supabase.co/auth/v1/callback`; (d) Client ID + Secret pasted into Supabase → Auth → Providers → Google. Code change is small: a button in [AdminLogin.tsx](src/pages/AdminLogin.tsx) calling `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })`.
 
 ---
 
 ## Done
+
+### 2026-05-23 — Finish Resend domain verification (Step 5d)
+- [x] DNS records (SPF + DKIM + MX) for `mail.greengrows.cdlegaspi.site` added at the `cdlegaspi.site` registrar; Resend dashboard reports "Domain verified, May 17 2026".
+- [x] Supabase secret `FROM_ADDRESS="GreenGrows <hello@mail.greengrows.cdlegaspi.site>"` set via `supabase secrets set`.
+- [x] Redeployed `notify-quote`, `notify-contact`, `send-reply` so they pick up the new env.
+- [x] Smoke test: reply sent from `/admin` to `greengrow_test_a@yopmail.com` (non-owner) delivered successfully — Resend onboarding restriction lifted. (Reply rendering is plain HTML, not the branded template — tracked as a separate follow-up.)
+- [x] Also switched Supabase Auth → SMTP Settings to Resend (`smtp.resend.com:465`, sender `hello@mail.greengrows.cdlegaspi.site`) after hitting Supabase's built-in email rate limit during admin password reset testing. Password-reset / OTP emails now route through Resend too.
 
 ### 2026-05-19 — Step 5c (cleanup): drop keepalive workflow + table (PR #18)
 - [x] Deleted [.github/workflows/supabase-keepalive.yml](.github/workflows/supabase-keepalive.yml) (the Mon/Wed/Fri curl-against-keepalive cron).
