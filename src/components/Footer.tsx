@@ -10,7 +10,7 @@ const Footer = () => {
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                 <Sprout className="h-6 w-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">GreenGrow</span>
+              <span className="text-xl font-bold">GreenGrows</span>
             </div>
             <p className="text-background/70 text-sm">
               Premium fertilizers for sustainable agriculture and exceptional crop yields.
