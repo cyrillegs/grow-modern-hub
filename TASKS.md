@@ -22,11 +22,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ## Build Order — Remaining
 
-### Step 5d — Misc follow-ups (P2) ← **NEXT**
-
-- [ ] **Apply migration `0004_drop_keepalive.sql`** in the Supabase SQL editor (or via CLI). PR #18 added the migration but it's still pending on the live database.
-
-### Step 7 — Analytics, error tracking, CI (P2)
+### Step 7 — Analytics, error tracking, CI (P2) ← **NEXT**
 
 - [ ] Decide Vercel Analytics vs GA4. Vercel is one toggle + `@vercel/analytics`; GA4 needs a tag in [index.html](index.html).
 - [ ] `npm i @sentry/react`; init in [src/main.tsx](src/main.tsx); add Vite source-map plugin.
@@ -54,6 +50,10 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 ---
 
 ## Done
+
+### 2026-05-23 — Step 5d closeout: keepalive table dropped on remote
+- [x] Verified `public.keepalive` no longer exists on the live database (only `admin_replies`, `contacts`, `products`, `quotes` visible in the Supabase Tables UI). Migration 0004 effectively applied — either run earlier via SQL Editor or the table never made it onto this DB.
+- [x] Final bullet of Step 5d resolved. Placeholder contact info moved to **Future** earlier today (blocked on real business info); Step 7 is the new **NEXT**.
 
 ### 2026-05-23 — Branded layout for admin reply emails (PR #22)
 - [x] [supabase/functions/send-reply/index.ts](supabase/functions/send-reply/index.ts) `bodyToHtml` now wraps the admin's text in the shared `emailLayout` (green header strip, white content card, WhatsApp footer) — same wrapper used by `notify-quote` and `notify-contact`.
