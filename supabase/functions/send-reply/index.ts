@@ -10,7 +10,13 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { OWNER_EMAILS, sendEmail } from "../_shared/email.ts";
+import {
+  emailLayout,
+  escapeHtml,
+  OWNER_EMAILS,
+  sendEmail,
+  TEXT_PRIMARY,
+} from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,15 +35,15 @@ type ReplyPayload = {
 };
 
 function bodyToHtml(plainText: string): string {
-  const escaped = plainText
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escaped = escapeHtml(plainText);
   const withBreaks = escaped.split("\n").join("<br>");
-  return `<!DOCTYPE html>
-<html><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px;">
-${withBreaks}
-</body></html>`;
+  const preheader =
+    plainText
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.length > 0) ?? "A reply from GreenGrows";
+  const body = `<p style="margin: 0; font-size: 15px; line-height: 1.7; color: ${TEXT_PRIMARY}; white-space: pre-wrap; word-break: break-word;">${withBreaks}</p>`;
+  return emailLayout({ preheader, body });
 }
 
 function jsonResponse(body: unknown, status: number): Response {
