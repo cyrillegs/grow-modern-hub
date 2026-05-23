@@ -6,6 +6,7 @@ import { RequestQuoteDialog } from "./RequestQuoteDialog";
 
 const insertMock = vi.fn();
 const toastMock = vi.fn();
+const trackMock = vi.fn();
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
@@ -15,6 +16,10 @@ vi.mock("@/lib/supabase", () => ({
 
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: toastMock }),
+}));
+
+vi.mock("@vercel/analytics", () => ({
+  track: (...args: unknown[]) => trackMock(...args),
 }));
 
 const renderDialog = (product = "NPK 20-20-20") =>
@@ -29,6 +34,7 @@ describe("<RequestQuoteDialog />", () => {
   beforeEach(() => {
     insertMock.mockReset();
     toastMock.mockReset();
+    trackMock.mockReset();
   });
 
   it("opens the dialog and shows the form when the trigger is clicked", async () => {
@@ -87,6 +93,9 @@ describe("<RequestQuoteDialog />", () => {
         title: expect.stringMatching(/quote request sent/i),
       }),
     );
+    expect(trackMock).toHaveBeenCalledWith("quote_submitted", {
+      product: "Urea (46-0-0)",
+    });
   });
 
   it("shows destructive toast when Supabase insert fails", async () => {
@@ -109,5 +118,6 @@ describe("<RequestQuoteDialog />", () => {
         }),
       );
     });
+    expect(trackMock).not.toHaveBeenCalled();
   });
 });

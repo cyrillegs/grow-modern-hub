@@ -24,7 +24,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 ### Step 7 — Analytics, error tracking, CI (P2) ← **NEXT**
 
-- [ ] Decide Vercel Analytics vs GA4. Vercel is one toggle + `@vercel/analytics`; GA4 needs a tag in [index.html](index.html).
+- [ ] **Install Vercel Analytics** — `@vercel/analytics` + `<Analytics />` in [App.tsx](src/App.tsx) + custom `track()` events on quote/contact form submissions + enable the Web Analytics toggle in Vercel project settings. Chose this over GA4 for faster setup and no cookie banner; GA4 deferred (see Future).
 - [ ] `npm i @sentry/react`; init in [src/main.tsx](src/main.tsx); add Vite source-map plugin.
 - [ ] Configure Sentry release tagging via Vercel build env (`VERCEL_GIT_COMMIT_SHA`).
 - [x] ~~Add a GitHub Actions workflow that runs `npm run test:run` on every PR.~~ Shipped in PR #12 ([ci.yml](.github/workflows/ci.yml)) — `npm ci` + Vitest + production build.
@@ -45,6 +45,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 
 - [ ] **Replace placeholder contact info in [src/components/Contact.tsx](src/components/Contact.tsx)** — still ships with the scaffold defaults (`info@fertilizers.com`, `+1 (555) ...`, `123 Agriculture Ave`). Blocked on the business having a real published email, phone, and physical address — until then, customers reach the owner via the contact form + WhatsApp FAB, which work today.
 - [ ] **Real ordering flow** — when GreenGrows has set pricing, delivery zones, payment integration (PayMongo/GCash/Stripe), BIR-compliant invoicing, and order fulfillment, design a proper checkout. Build fresh, not by reviving the removed Buy Now placeholder.
+- [ ] **GA4 (Google Analytics 4)** — deferred in favor of Vercel Analytics. Revisit if/when funnel-level breakdowns, custom audience segmentation, or Google Ads attribution become important. Implementation would be a measurement-ID `<script>` in [index.html](index.html) and a small SPA route-change `page_view` hook (react-router doesn't auto-fire pageviews).
 - [ ] **Google OAuth on `/admin/login`** — add "Sign in with Google" alongside email+password to skip password-reset friction. Security model: rely on the existing "Allow new users to sign up" = OFF setting, which blocks OAuth signup too (only emails already in `auth.users` can complete the flow), so no client-side allowlist or Auth Hook is needed. Prereqs before coding: (a) owner row in Supabase → Auth → Users uses the Gmail address that will be used for OAuth; (b) "Allow new users to sign up" is still OFF; (c) Google Cloud OAuth Client ID created with redirect URI `https://aipegsofrutdhetkstyw.supabase.co/auth/v1/callback`; (d) Client ID + Secret pasted into Supabase → Auth → Providers → Google. Code change is small: a button in [AdminLogin.tsx](src/pages/AdminLogin.tsx) calling `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })`.
 
 ---
