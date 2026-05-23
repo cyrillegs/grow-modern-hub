@@ -55,7 +55,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-background/10 pt-8 text-center text-sm text-background/70">
-          <p>&copy; 2025 GreenGrow Fertilizers. All rights reserved.</p>
+          <p>&copy; 2026 GreenGrows. All rights reserved.</p>
         </div>
       </div>
     </footer>
