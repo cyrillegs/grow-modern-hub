@@ -69,6 +69,14 @@ serve(async (req) => {
 
     const c = payload.record;
 
+    // Suppress emails for rows created by the daily Playwright smoke
+    // (e2e/admin-smoke.spec.ts). The smoke's INSERT keeps the project
+    // warm against Supabase free-tier auto-pause; the notification
+    // email would just be daily owner-inbox noise.
+    if (c.name?.startsWith("E2E-SMOKE")) {
+      return new Response("Skipped: E2E smoke marker", { status: 200 });
+    }
+
     await sendEmail({
       to: OWNER_EMAILS,
       replyTo: c.email,
