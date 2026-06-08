@@ -40,6 +40,7 @@ Audit snapshot from 2026-05-10. Check items off as they ship.
 - [ ] Check whether the homepage `Products` *component* (used on `/`, distinct from `/products` page) still has a fake Buy Now or quote flow — clean up consistently if so.
 - [ ] Decide whether to tighten [tsconfig.json](tsconfig.json) (`strictNullChecks`, `noImplicitAny`) — progressive opt-in by file is fine.
 - [ ] Image optimization audit (lazy-loading, sizing, modern formats).
+- [ ] **Cron-cleanup of E2E-SMOKE rows** — the daily smoke now writes a quote + contact each run, tagged with `name LIKE 'E2E-SMOKE-%'`. Rows accumulate at ~2/day. Add a Postgres scheduled function (or a weekly GH Actions job) that runs `delete from public.quotes where name like 'E2E-SMOKE-%' and created_at < now() - interval '7 days';` and the same for `contacts`. Low priority — even 1000 rows is cheap; revisit when admin lists feel cluttered.
 
 ### Future (not scheduled)
 
