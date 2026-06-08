@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { track } from "@vercel/analytics";
 
 const quoteSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
@@ -70,6 +71,8 @@ export const RequestQuoteDialog = ({ product, trigger }: Props) => {
       });
       return;
     }
+
+    track("quote_submitted", { product });
 
     toast({
       title: "Quote request sent!",

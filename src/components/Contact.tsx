@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
+import { track } from "@vercel/analytics";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
@@ -51,6 +52,8 @@ const Contact = () => {
       });
       return;
     }
+
+    track("contact_submitted");
 
     toast({
       title: "Message sent!",

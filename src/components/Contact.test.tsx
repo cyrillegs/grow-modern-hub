@@ -5,6 +5,7 @@ import Contact from "./Contact";
 
 const insertMock = vi.fn();
 const toastMock = vi.fn();
+const trackMock = vi.fn();
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
@@ -16,10 +17,15 @@ vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: toastMock }),
 }));
 
+vi.mock("@vercel/analytics", () => ({
+  track: (...args: unknown[]) => trackMock(...args),
+}));
+
 describe("<Contact />", () => {
   beforeEach(() => {
     insertMock.mockReset();
     toastMock.mockReset();
+    trackMock.mockReset();
   });
 
   it("renders the form heading and submit button", () => {
@@ -62,6 +68,7 @@ describe("<Contact />", () => {
     expect(toastMock).toHaveBeenCalledWith(
       expect.objectContaining({ title: expect.stringMatching(/message sent/i) }),
     );
+    expect(trackMock).toHaveBeenCalledWith("contact_submitted");
   });
 
   it("shows an error toast when Supabase insert fails", async () => {
@@ -82,5 +89,6 @@ describe("<Contact />", () => {
         }),
       );
     });
+    expect(trackMock).not.toHaveBeenCalled();
   });
 });
