@@ -1,0 +1,43 @@
+name: Keepalive
+
+# Keeps the repository "active" so GitHub does not auto-disable our scheduled
+# workflows after 60 days of no repository activity. This matters because the
+# Daily smoke doubles as the Supabase keepalive (see daily-smoke.yml) — if it
+# were disabled, the daily SELECT would stop and Supabase free-tier could
+# auto-pause. Only public repos are subject to the 60-day rule.
+#
+# It runs weekly but only pushes a commit when the repo has actually gone quiet
+# (~50 days since the last commit), so it stays silent while we're merging PRs.
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # 03:00 UTC every Monday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    name: Reset the 60-day inactivity timer if needed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Commit a keepalive marker only if the repo has gone quiet
+        run: |
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          days=$(( (now - last) / 86400 ))
+          if [ "$days" -lt 50 ]; then
+            echo "Only $days days since last commit — repo is active, skipping."
+            exit 0
+          fi
+          echo "$days days quiet — pushing a keepalive commit."
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/keepalive.txt
+          git commit -m "chore: keepalive"
+          git push
